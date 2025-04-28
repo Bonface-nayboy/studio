@@ -1,4 +1,4 @@
-import { Laptop, Mobile } from "lucide-react";
+import { Laptop, Smartphone } from "lucide-react";
 
 export const WebsiteIcon = Laptop;
-export const MobileIcon = Mobile;
+export const MobileIcon = Smartphone;
