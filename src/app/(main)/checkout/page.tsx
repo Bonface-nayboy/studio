@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Minus, Plus, Trash2, CreditCard, Smartphone, Paypal } from 'lucide-react'; // Added icons
+import { Minus, Plus, Trash2, CreditCard, Smartphone } from 'lucide-react'; // Removed Paypal
 import { useCart } from '@/context/cart-context';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
@@ -24,6 +24,27 @@ import { Label } from "@/components/ui/label";
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 
+// Inline SVG for PayPal icon
+const PaypalIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    {/* Basic representation of a payment/brand icon */}
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+  </svg>
+);
+
+
 export default function CheckoutPage() {
   const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
@@ -36,8 +57,8 @@ export default function CheckoutPage() {
   };
 
   const handleProceedToCheckout = () => {
-    // This function is now handled by DialogTrigger opening the modal
-    // We keep the state update in case we need it for other logic
+    // Triggering modal is handled by DialogTrigger, but we reset payment method selection
+    setSelectedPaymentMethod(null);
     setIsModalOpen(true);
   };
 
@@ -48,7 +69,7 @@ export default function CheckoutPage() {
             description: "Please select a payment method.",
             variant: "destructive",
         });
-        return;
+        return false; // Indicate failure to close dialog conditionally
      }
 
     console.log("Selected Payment Method:", selectedPaymentMethod);
@@ -60,16 +81,18 @@ export default function CheckoutPage() {
             description: "Initiating M-Pesa payment... (Simulation)",
         });
         // Simulate API call or further steps
-        // On success: clearCart(); setIsModalOpen(false);
+        // On successful real integration, you would:
+        // clearCart();
+        // setIsModalOpen(false); // Or let DialogClose handle it
+        return true; // Indicate success
     } else {
         toast({
-            title: "Payment Method Not Available",
+            title: "Payment Method Not Implemented",
             description: `Payment via ${selectedPaymentMethod} is not yet implemented.`,
-            variant: "destructive", // Use destructive variant for unimplemented methods
+            variant: "default", // Use default variant for info
         });
+        return true; // Still allow closing the dialog for unimplemented methods
     }
-     // Close the modal after attempting payment (or showing message)
-     // setIsModalOpen(false); // DialogClose handles this
   };
 
   return (
@@ -168,7 +191,8 @@ export default function CheckoutPage() {
                 {/* Wrap the button in DialogTrigger */}
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                    <DialogTrigger asChild>
-                    <Button className="w-full" onClick={handleProceedToCheckout}>
+                    {/* Disable checkout if cart is empty */}
+                    <Button className="w-full" onClick={handleProceedToCheckout} disabled={cart.length === 0}>
                       Proceed to Checkout
                     </Button>
                    </DialogTrigger>
@@ -176,7 +200,7 @@ export default function CheckoutPage() {
                     <DialogHeader>
                       <DialogTitle>Select Payment Method</DialogTitle>
                       <DialogDescription>
-                        Choose how you would like to pay for your order.
+                        Choose how you would like to pay for your order. Total: ${totalPrice.toFixed(2)}
                       </DialogDescription>
                     </DialogHeader>
                     <RadioGroup
@@ -191,15 +215,15 @@ export default function CheckoutPage() {
                         </Label>
                       </div>
                       <div className="flex items-center space-x-2 p-3 rounded-md border hover:border-primary transition-colors cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-muted">
-                        <RadioGroupItem value="card" id="card" />
-                        <Label htmlFor="card" className="flex items-center gap-2 cursor-pointer flex-grow">
-                           <CreditCard className="h-5 w-5" /> Credit/Debit Card
+                        <RadioGroupItem value="card" id="card" disabled /> {/* Disable unimplemented */}
+                        <Label htmlFor="card" className="flex items-center gap-2 cursor-pointer flex-grow text-muted-foreground">
+                           <CreditCard className="h-5 w-5" /> Credit/Debit Card (Coming Soon)
                          </Label>
                       </div>
                        <div className="flex items-center space-x-2 p-3 rounded-md border hover:border-primary transition-colors cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-muted">
-                        <RadioGroupItem value="paypal" id="paypal" />
-                         <Label htmlFor="paypal" className="flex items-center gap-2 cursor-pointer flex-grow">
-                           <Paypal className="h-5 w-5" /> PayPal
+                        <RadioGroupItem value="paypal" id="paypal" disabled /> {/* Disable unimplemented */}
+                         <Label htmlFor="paypal" className="flex items-center gap-2 cursor-pointer flex-grow text-muted-foreground">
+                           <PaypalIcon className="h-5 w-5" /> PayPal (Coming Soon) {/* Use SVG icon */}
                         </Label>
                       </div>
                     </RadioGroup>
@@ -207,12 +231,14 @@ export default function CheckoutPage() {
                        <DialogClose asChild>
                          <Button variant="outline">Cancel</Button>
                        </DialogClose>
-                       {/* Keep DialogClose wrapping the Confirm button if you want it to close regardless of success/failure */}
-                       <DialogClose asChild={selectedPaymentMethod !== null}>
-                           <Button onClick={handleConfirmPayment}>
+                       {/* Wrap Confirm Payment button in DialogClose to automatically close on click */}
+                       {/* The onClick handler determines if the action succeeded */}
+                       {/* We don't use conditional asChild anymore */}
+                       <DialogClose asChild>
+                           <Button onClick={handleConfirmPayment} disabled={!selectedPaymentMethod}>
                                Confirm Payment
                            </Button>
-                        </DialogClose>
+                       </DialogClose>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -224,3 +250,4 @@ export default function CheckoutPage() {
     </main>
   );
 }
+
