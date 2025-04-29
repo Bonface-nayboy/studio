@@ -1,4 +1,3 @@
-
 'use client';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
@@ -35,8 +34,12 @@ export default function MainLayout({
               <span className="sr-only">Cart</span>
             </Button>
           </Link>
-          <Button variant="secondary" size="sm">Sign In</Button>
-          <Button size="sm">Sign Up</Button>
+          <Link href="/signin" passHref>
+            <Button variant="secondary" size="sm">Sign In</Button>
+          </Link>
+          <Link href="/signup" passHref>
+            <Button size="sm">Sign Up</Button>
+          </Link>
         </nav>
       </header>
         {children}
@@ -44,3 +47,4 @@ export default function MainLayout({
     </div>
   );
 }
+
