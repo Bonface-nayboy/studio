@@ -4,12 +4,13 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Minus, Plus, X } from 'lucide-react';
+import { Minus, Plus, X, PlusCircle } from 'lucide-react'; // Import PlusCircle
 import { sampleProducts } from '@/data/products';
 import { useCart } from '@/context/cart-context';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTrigger, DialogClose } from '@/components/ui/dialog'; // Import Dialog components
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'; // Import ScrollArea for modal
+import Link from 'next/link'; // Import Link
 
 export default function EcommercePage() {
   const { addToCart, cart } = useCart();
@@ -33,7 +34,14 @@ export default function EcommercePage() {
 
   return (
     <main className="container mx-auto py-8 px-4 flex-grow">
-      <h1 className="text-3xl font-bold mb-8">Products</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Products</h1>
+        <Button asChild>
+          <Link href="/ecommerce/create">
+            <PlusCircle className="mr-2 h-4 w-4" /> Add Product
+          </Link>
+        </Button>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {sampleProducts.map((product) => {
           const cartItem = cart.find(item => item.id === product.id);
@@ -62,7 +70,7 @@ export default function EcommercePage() {
                   </div>
                 </CardHeader>
                 <CardContent className="flex-grow p-4">
-                  <p className="text-sm mb-4">{product.description}</p>
+                  <p className="text-sm mb-4 line-clamp-3">{product.description}</p> {/* Added line-clamp */}
                   <p className="text-lg font-bold">${product.price.toFixed(2)}</p>
                 </CardContent>
                 <CardFooter className="p-4 bg-muted/50 mt-auto">
