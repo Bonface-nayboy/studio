@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/context/cart-context';
+import { Logo } from '@/components/logo'; // Import the Logo component
 
 export default function MainLayout({
   children,
@@ -16,8 +17,8 @@ export default function MainLayout({
   return (
     <div className="flex flex-col min-h-screen">
       <header className="bg-appbar-background text-appbar-foreground p-4 md:p-6 flex items-center justify-between rounded-b-md shadow-md sticky top-0 z-50">
-        <Link href="/" className="text-xl md:text-2xl font-bold">
-          Product Showcase
+        <Link href="/" className="flex items-center"> {/* Wrap logo in Link */}
+          <Logo className="h-8 md:h-10 w-auto" /> {/* Use the Logo component */}
         </Link>
         <nav className="flex items-center space-x-2 md:space-x-4">
            <Link href="/ecommerce" passHref>
