@@ -1,5 +1,7 @@
+
 "use client";
 
+import type React from 'react'; // Explicit import
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,8 +14,7 @@ import {
 } from "@/components/ui/card";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
-import { Toaster } from "@/components/ui/toaster";
-import { WebsiteIcon, MobileIcon } from "@/components/icons";
+import { WebsiteIcon, SmartphoneIcon } from "@/components/icons"; // Use SmartphoneIcon
 
 const products = [
   {
@@ -27,12 +28,13 @@ const products = [
     id: "mobile-apps",
     name: "Mobile Apps",
     description: "Develop powerful mobile apps for iOS and Android.",
-    icon: MobileIcon,
+    icon: SmartphoneIcon, // Use SmartphoneIcon
     link: "#",
   },
 ];
 
-export default function Home() {
+// Explicitly type the component
+const Home: React.FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -79,29 +81,20 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="bg-appbar-background text-appbar-foreground p-6 flex items-center justify-between rounded-b-md shadow-md">
-        <h1 className="text-2xl font-bold">Product Showcase</h1>
-        <div className="flex items-center space-x-4">
-          <Button variant="secondary">Sign In</Button>
-          <Button>Sign Up</Button>
-        </div>
-      </header>
-
       <main className="container mx-auto py-12 px-4 flex-grow">
         <section className="mb-16">
           <h2 className="text-3xl font-semibold mb-6">Our Products</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {products.map((product) => (
-              <Card key={product.id}>
+              <Card key={product.id} className="flex flex-col">
                 <CardHeader>
                   <CardTitle className="flex items-center">
-                    <product.icon className="mr-2 h-6 w-6" />
+                    <product.icon className="mr-2 h-6 w-6 text-primary" />
                     {product.name}
                   </CardTitle>
                   <CardDescription>{product.description}</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="mt-auto">
                   <Button asChild variant="outline">
                     <a href={product.link}>Learn More</a>
                   </Button>
@@ -124,7 +117,7 @@ export default function Home() {
             <CardContent>
               <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium">
+                  <label htmlFor="name" className="block text-sm font-medium mb-1">
                     Name
                   </label>
                   <Input
@@ -132,10 +125,11 @@ export default function Home() {
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    placeholder="Your Name"
                   />
                 </div>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium">
+                  <label htmlFor="email" className="block text-sm font-medium mb-1">
                     Email
                   </label>
                   <Input
@@ -143,19 +137,21 @@ export default function Home() {
                     id="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                     placeholder="Your Email"
                   />
                 </div>
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium">
+                  <label htmlFor="message" className="block text-sm font-medium mb-1">
                     Message
                   </label>
                   <Textarea
                     id="message"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Your Message"
                   />
                 </div>
-                <Button type="submit" className="bg-accent-teal text-white">
+                <Button type="submit" className="bg-accent-teal hover:bg-accent-teal/90 text-white">
                   Send Message
                 </Button>
               </form>
@@ -163,7 +159,7 @@ export default function Home() {
           </Card>
         </section>
       </main>
-      <Toaster />
-    </div>
   );
 }
+
+export default Home; // Ensure default export
