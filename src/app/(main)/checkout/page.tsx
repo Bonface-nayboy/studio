@@ -5,18 +5,71 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Minus, Plus, Trash2, CreditCard, Smartphone, Paypal } from 'lucide-react'; // Added icons
 import { useCart } from '@/context/cart-context';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose, // Import DialogClose
+} from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { useState } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 export default function CheckoutPage() {
   const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
 
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const handleQuantityChange = (productId: string, newQuantity: number) => {
      updateQuantity(productId, Math.max(0, newQuantity)); // Prevent negative quantity
+  };
+
+  const handleProceedToCheckout = () => {
+    // This function is now handled by DialogTrigger opening the modal
+    // We keep the state update in case we need it for other logic
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmPayment = () => {
+     if (!selectedPaymentMethod) {
+        toast({
+            title: "Payment Method Required",
+            description: "Please select a payment method.",
+            variant: "destructive",
+        });
+        return;
+     }
+
+    console.log("Selected Payment Method:", selectedPaymentMethod);
+
+    if (selectedPaymentMethod === 'mpesa') {
+        // Placeholder for M-Pesa integration
+        toast({
+            title: "M-Pesa Payment",
+            description: "Initiating M-Pesa payment... (Simulation)",
+        });
+        // Simulate API call or further steps
+        // On success: clearCart(); setIsModalOpen(false);
+    } else {
+        toast({
+            title: "Payment Method Not Available",
+            description: `Payment via ${selectedPaymentMethod} is not yet implemented.`,
+            variant: "destructive", // Use destructive variant for unimplemented methods
+        });
+    }
+     // Close the modal after attempting payment (or showing message)
+     // setIsModalOpen(false); // DialogClose handles this
   };
 
   return (
@@ -37,12 +90,12 @@ export default function CheckoutPage() {
             {cart.map((item) => (
               <Card key={item.id} className="flex items-center p-4 gap-4 overflow-hidden">
                  <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border">
-                    {item.imageUrls && item.imageUrls.length > 0 && ( // Check if imageUrls exists and has items
+                    {item.imageUrls && item.imageUrls.length > 0 && (
                       <Image
-                          src={item.imageUrls[0]} // Display the first image
+                          src={item.imageUrls[0]}
                           alt={item.name}
-                          layout="fill"
-                          objectFit="cover"
+                          fill={true} // Use fill for responsive images within container
+                          style={{ objectFit: "cover" }} // Ensure image covers the area
                       />
                     )}
                  </div>
@@ -112,7 +165,57 @@ export default function CheckoutPage() {
                  </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full">Proceed to Checkout</Button>
+                {/* Wrap the button in DialogTrigger */}
+                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                   <DialogTrigger asChild>
+                    <Button className="w-full" onClick={handleProceedToCheckout}>
+                      Proceed to Checkout
+                    </Button>
+                   </DialogTrigger>
+                   <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Select Payment Method</DialogTitle>
+                      <DialogDescription>
+                        Choose how you would like to pay for your order.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <RadioGroup
+                      value={selectedPaymentMethod ?? undefined} // Handle null state for RadioGroup
+                       onValueChange={setSelectedPaymentMethod}
+                      className="grid gap-4 py-4"
+                    >
+                      <div className="flex items-center space-x-2 p-3 rounded-md border hover:border-primary transition-colors cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-muted">
+                        <RadioGroupItem value="mpesa" id="mpesa" />
+                        <Label htmlFor="mpesa" className="flex items-center gap-2 cursor-pointer flex-grow">
+                          <Smartphone className="h-5 w-5" /> M-Pesa
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2 p-3 rounded-md border hover:border-primary transition-colors cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-muted">
+                        <RadioGroupItem value="card" id="card" />
+                        <Label htmlFor="card" className="flex items-center gap-2 cursor-pointer flex-grow">
+                           <CreditCard className="h-5 w-5" /> Credit/Debit Card
+                         </Label>
+                      </div>
+                       <div className="flex items-center space-x-2 p-3 rounded-md border hover:border-primary transition-colors cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-muted">
+                        <RadioGroupItem value="paypal" id="paypal" />
+                         <Label htmlFor="paypal" className="flex items-center gap-2 cursor-pointer flex-grow">
+                           <Paypal className="h-5 w-5" /> PayPal
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                    <DialogFooter>
+                       <DialogClose asChild>
+                         <Button variant="outline">Cancel</Button>
+                       </DialogClose>
+                       {/* Keep DialogClose wrapping the Confirm button if you want it to close regardless of success/failure */}
+                       <DialogClose asChild={selectedPaymentMethod !== null}>
+                           <Button onClick={handleConfirmPayment}>
+                               Confirm Payment
+                           </Button>
+                        </DialogClose>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </CardFooter>
             </Card>
           </div>
