@@ -6,8 +6,10 @@ import { createContext, useContext, useState, useMemo, useCallback } from 'react
 import type { Product } from '@/data/products';
 import { toast } from '@/hooks/use-toast';
 
-export interface CartItem extends Product {
+// Ensure CartItem also uses imageUrls
+export interface CartItem extends Omit<Product, 'imageUrl'> { // Omit potentially legacy field if needed
   quantity: number;
+  imageUrls: string[]; // Make sure CartItem uses imageUrls
 }
 
 interface CartContextType {
@@ -31,6 +33,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const newQuantity = updatedCart[existingItemIndex].quantity + quantity;
          if (newQuantity <= 0) {
            // Remove item if quantity becomes 0 or less
+           toast({ title: "Item Removed", description: `${product.name} removed from cart.`, variant: "destructive" });
            return updatedCart.filter(item => item.id !== product.id);
          }
         updatedCart[existingItemIndex].quantity = newQuantity;
@@ -39,6 +42,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       } else {
           if (quantity <= 0) return prevCart; // Don't add if initial quantity is invalid
         toast({ title: "Item Added", description: `${product.name} added to cart.` });
+        // Ensure the full product object (including imageUrls) is added
         return [...prevCart, { ...product, quantity }];
       }
     });
@@ -95,3 +99,4 @@ export function useCart() {
   }
   return context;
 }
+

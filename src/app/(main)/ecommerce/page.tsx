@@ -9,9 +9,10 @@ import { sampleProducts } from '@/data/products';
 import { useCart } from '@/context/cart-context';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTrigger, DialogClose } from '@/components/ui/dialog'; // Import Dialog components
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'; // Import ScrollArea for modal
 
 export default function EcommercePage() {
-  const { addToCart, updateQuantity, cart } = useCart();
+  const { addToCart, cart } = useCart();
    // Local state to manage quantity input for each product
   const [productQuantities, setProductQuantities] = useState<{ [key: string]: number }>({});
 
@@ -38,6 +39,7 @@ export default function EcommercePage() {
           const cartItem = cart.find(item => item.id === product.id);
           const quantityInCart = cartItem?.quantity || 0;
           const currentInputQuantity = productQuantities[product.id] || 1;
+          const firstImageUrl = product.imageUrls[0]; // Get the first image for the card
 
           return (
              <Dialog key={product.id}> {/* Wrap Card with Dialog */}
@@ -46,7 +48,7 @@ export default function EcommercePage() {
                    <DialogTrigger asChild>
                      <div className="aspect-video relative w-full cursor-pointer group overflow-hidden">
                        <Image
-                         src={product.imageUrl}
+                         src={firstImageUrl} // Display the first image on the card
                          alt={product.name}
                          layout="fill"
                          objectFit="cover"
@@ -95,26 +97,52 @@ export default function EcommercePage() {
                 </CardFooter>
               </Card>
 
-              {/* Modal Content */}
-              <DialogContent className="max-w-3xl p-0 bg-transparent border-0 shadow-none">
-                 <DialogClose className="absolute right-2 top-2 z-10 rounded-full p-1.5 bg-background/60 text-foreground/80 backdrop-blur-sm transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              {/* Modal Content - Updated for scrollable images */}
+              <DialogContent className="max-w-4xl p-4 sm:p-6 bg-background border rounded-lg shadow-xl">
+                 <DialogClose className="absolute right-3 top-3 z-10 rounded-full p-1.5 bg-background/60 text-foreground/80 backdrop-blur-sm transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
                     <X className="h-5 w-5" />
                     <span className="sr-only">Close</span>
                   </DialogClose>
-                <div className="relative aspect-video w-full">
-                  <Image
-                    src={product.imageUrl} // Display the selected product image
-                    alt={product.name}
-                    layout="fill"
-                    objectFit="contain" // Use contain to show the whole image without cropping
-                  />
-                  {/* Placeholder for future image scrolling controls */}
-                  {/* <div className="absolute inset-0 flex items-center justify-between p-4">
-                    <Button variant="ghost" size="icon" className="text-white bg-black/30 hover:bg-black/50"> L </Button>
-                    <Button variant="ghost" size="icon" className="text-white bg-black/30 hover:bg-black/50"> R </Button>
-                  </div> */}
-                </div>
-                  <p className="text-center text-sm text-muted-foreground p-2 bg-background/80 backdrop-blur-sm">{product.name}</p> {/* Optional caption */}
+
+                 <h2 className="text-xl font-semibold mb-4">{product.name}</h2>
+
+                <ScrollArea className="w-full whitespace-nowrap rounded-md border">
+                  <div className="flex space-x-4 p-4">
+                    {product.imageUrls.map((url, index) => (
+                      <div key={index} className="relative aspect-square h-64 md:h-80 lg:h-96 flex-shrink-0 overflow-hidden rounded-md">
+                         <Image
+                           src={url}
+                           alt={`${product.name} - Image ${index + 1}`}
+                           layout="fill"
+                           objectFit="contain"
+                           className="bg-muted" // Add a background for letterboxing if needed
+                         />
+                       </div>
+                    ))}
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+                 </ScrollArea>
+
+                 <p className="text-sm text-muted-foreground mt-4">{product.description}</p>
+                  <p className="text-lg font-bold mt-2">${product.price.toFixed(2)}</p>
+
+                   {/* Keep add to cart functionality in modal too if desired */}
+                   {/*
+                   <div className="mt-6 flex items-center justify-end gap-2">
+                     <div className="flex items-center border rounded-md">
+                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(product.id, -1)} disabled={currentInputQuantity <= 1}>
+                         <Minus className="h-4 w-4" />
+                       </Button>
+                       <span className="w-10 text-center text-sm font-medium">{currentInputQuantity}</span>
+                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(product.id, 1)}>
+                         <Plus className="h-4 w-4" />
+                       </Button>
+                     </div>
+                     <Button onClick={() => handleAddToCart(product)} size="sm">
+                       Add to Cart
+                     </Button>
+                   </div>
+                   */}
               </DialogContent>
             </Dialog>
           );
@@ -123,3 +151,4 @@ export default function EcommercePage() {
     </main>
   );
 }
+

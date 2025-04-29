@@ -37,12 +37,14 @@ export default function CheckoutPage() {
             {cart.map((item) => (
               <Card key={item.id} className="flex items-center p-4 gap-4 overflow-hidden">
                  <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border">
-                    <Image
-                        src={item.imageUrl}
-                        alt={item.name}
-                        layout="fill"
-                        objectFit="cover"
-                    />
+                    {item.imageUrls && item.imageUrls.length > 0 && ( // Check if imageUrls exists and has items
+                      <Image
+                          src={item.imageUrls[0]} // Display the first image
+                          alt={item.name}
+                          layout="fill"
+                          objectFit="cover"
+                      />
+                    )}
                  </div>
                 <div className="flex-grow">
                   <h2 className="font-semibold">{item.name}</h2>
@@ -119,4 +121,3 @@ export default function CheckoutPage() {
     </main>
   );
 }
-

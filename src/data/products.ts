@@ -5,7 +5,7 @@ export interface Product {
   description: string;
   price: number;
   category: string;
-  imageUrl: string;
+  imageUrls: string[]; // Changed from imageUrl to imageUrls array
 }
 
 export const sampleProducts: Product[] = [
@@ -15,7 +15,11 @@ export const sampleProducts: Product[] = [
     description: 'High-fidelity sound with noise cancellation.',
     price: 149.99,
     category: 'Electronics',
-    imageUrl: 'https://picsum.photos/seed/headphones/400/300',
+    imageUrls: [
+      'https://picsum.photos/seed/headphones1/400/300',
+      'https://picsum.photos/seed/headphones2/400/300',
+      'https://picsum.photos/seed/headphones3/400/300',
+    ],
   },
   {
     id: 'prod_002',
@@ -23,7 +27,12 @@ export const sampleProducts: Product[] = [
     description: 'Soft and breathable, ethically sourced.',
     price: 24.99,
     category: 'Apparel',
-    imageUrl: 'https://picsum.photos/seed/tshirt/400/300',
+    imageUrls: [
+      'https://picsum.photos/seed/tshirt1/400/300',
+      'https://picsum.photos/seed/tshirt2/400/300',
+      'https://picsum.photos/seed/tshirt3/400/300',
+      'https://picsum.photos/seed/tshirt4/400/300',
+    ],
   },
   {
     id: 'prod_003',
@@ -31,7 +40,10 @@ export const sampleProducts: Product[] = [
     description: 'Keeps drinks cold for 24 hours or hot for 12.',
     price: 19.99,
     category: 'Home Goods',
-    imageUrl: 'https://picsum.photos/seed/bottle/400/300',
+     imageUrls: [
+        'https://picsum.photos/seed/bottle1/400/300',
+        'https://picsum.photos/seed/bottle2/400/300',
+      ],
   },
    {
     id: 'prod_004',
@@ -39,7 +51,11 @@ export const sampleProducts: Product[] = [
     description: 'Lightweight and comfortable for daily runs.',
     price: 89.99,
     category: 'Footwear',
-    imageUrl: 'https://picsum.photos/seed/shoes/400/300',
+     imageUrls: [
+        'https://picsum.photos/seed/shoes1/400/300',
+        'https://picsum.photos/seed/shoes2/400/300',
+        'https://picsum.photos/seed/shoes3/400/300',
+      ],
   },
   {
     id: 'prod_005',
@@ -47,7 +63,13 @@ export const sampleProducts: Product[] = [
     description: 'Durable and spacious with multiple compartments.',
     price: 59.99,
     category: 'Accessories',
-    imageUrl: 'https://picsum.photos/seed/backpack/400/300',
+    imageUrls: [
+      'https://picsum.photos/seed/backpack1/400/300',
+      'https://picsum.photos/seed/backpack2/400/300',
+      'https://picsum.photos/seed/backpack3/400/300',
+      'https://picsum.photos/seed/backpack4/400/300',
+      'https://picsum.photos/seed/backpack5/400/300',
+    ],
   },
   {
     id: 'prod_006',
@@ -55,6 +77,11 @@ export const sampleProducts: Product[] = [
     description: 'Track your fitness and stay connected.',
     price: 199.99,
     category: 'Electronics',
-    imageUrl: 'https://picsum.photos/seed/smartwatch/400/300',
+    imageUrls: [
+      'https://picsum.photos/seed/smartwatch1/400/300',
+      'https://picsum.photos/seed/smartwatch2/400/300',
+      'https://picsum.photos/seed/smartwatch3/400/300',
+     ],
   },
 ];
+
