@@ -2,7 +2,7 @@
 'use client';
 
 import type React from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormStatus } from 'react-dom'; // Keep useFormStatus from react-dom
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -15,7 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { createProduct, type ProductFormState } from '@/actions/productActions'; // Import the server action
-import { useEffect } from 'react';
+import { useEffect, useActionState } from 'react'; // Import useActionState from react
 
 // Define the schema for product creation using Zod (matches server action schema)
 const productSchema = z.object({
@@ -45,7 +45,8 @@ function SubmitButton() {
 export default function CreateProductPage() {
   // Initial state for the form action
   const initialState: ProductFormState = { message: '', success: false };
-  const [state, formAction] = useFormState(createProduct, initialState);
+  // Use useActionState instead of useFormState
+  const [state, formAction] = useActionState(createProduct, initialState);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),

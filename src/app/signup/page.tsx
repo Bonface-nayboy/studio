@@ -132,7 +132,7 @@ const SignUpPage = () => {
                   disabled={isLoading}
                 />
               </div>
-              <Button type="submit" disabled={isLoading} className="bg-accent-teal hover:bg-accent-teal/90 text-white">
+              <Button type="submit" disabled={isLoading} className="bg-accent hover:bg-accent/90 text-accent-foreground">
                 {isLoading ? 'Signing Up...' : 'Sign Up'}
               </Button>
             </form>

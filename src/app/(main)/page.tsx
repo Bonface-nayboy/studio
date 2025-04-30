@@ -12,11 +12,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormStatus } from 'react-dom'; // Keep useFormStatus from react-dom
 import { toast } from "@/hooks/use-toast";
 import { WebsiteIcon, SmartphoneIcon } from "@/components/icons";
 import { submitContactForm, type ContactFormState } from '@/actions/contactActions'; // Import server action
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useActionState } from 'react'; // Import useActionState from react
 
 const products = [
   {
@@ -48,7 +48,8 @@ function SubmitButton() {
 // Explicitly type the component
 const Home: React.FC = () => {
   const initialState: ContactFormState = { message: '', success: false };
-  const [state, formAction] = useFormState(submitContactForm, initialState);
+  // Use useActionState instead of useFormState
+  const [state, formAction] = useActionState(submitContactForm, initialState);
   const formRef = useRef<HTMLFormElement>(null); // Ref to reset the form
 
   useEffect(() => {
