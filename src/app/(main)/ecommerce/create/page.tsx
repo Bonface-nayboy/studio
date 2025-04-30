@@ -2,7 +2,7 @@
 'use client';
 
 import type React from 'react';
-import { useState } from 'react';
+import { useFormState, useFormStatus } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,8 +14,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { createProduct, type ProductFormState } from '@/actions/productActions'; // Import the server action
+import { useEffect } from 'react';
 
-// Define the schema for product creation using Zod
+// Define the schema for product creation using Zod (matches server action schema)
 const productSchema = z.object({
   name: z.string().min(3, { message: 'Product name must be at least 3 characters long.' }),
   description: z.string().min(10, { message: 'Description must be at least 10 characters long.' }),
@@ -24,42 +26,87 @@ const productSchema = z.object({
     z.number({ invalid_type_error: 'Price must be a number.' }).positive({ message: 'Price must be positive.' })
   ),
   category: z.string().min(2, { message: 'Category is required.' }),
-  imageUrls: z.string().min(1, {message: 'At least one image URL is required.'}).transform(val => val.split(',').map(url => url.trim()).filter(url => url)), // Split comma-separated URLs
+  imageUrls: z.string().min(1, {message: 'At least one image URL is required.'}), // Keep as string for form input
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
 
+// SubmitButton component to show loading state
+function SubmitButton() {
+    const { pending } = useFormStatus();
+    return (
+        <Button type="submit" disabled={pending} className="w-full">
+            {pending ? 'Creating...' : 'Create Product'}
+        </Button>
+    );
+}
+
+
 export default function CreateProductPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  // Initial state for the form action
+  const initialState: ProductFormState = { message: '', success: false };
+  const [state, formAction] = useFormState(createProduct, initialState);
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
       name: '',
       description: '',
-      price: undefined, // Use undefined for numeric inputs that might be empty initially
+      price: undefined,
       category: '',
       imageUrls: '',
     },
   });
 
-  const onSubmit = async (data: ProductFormValues) => {
-    setIsLoading(true);
-    console.log('Product Data:', data);
+   // Effect to show toast message on success/error and reset form
+   useEffect(() => {
+    if (state.success) {
+      toast({
+        title: 'Success',
+        description: state.message,
+      });
+      form.reset(); // Reset form fields
+       // Optionally redirect or perform other actions
+    } else if (state.message && !state.success) {
+        // Show general error message if present
+        if (state.errors && state.errors.length > 0) {
+             // Optionally, map specific errors to form fields if needed,
+             // though react-hook-form + zodResolver usually handles this
+             console.error("Server validation errors:", state.errors);
+             // Example: Manually setting an error for a field
+             // state.errors.forEach(err => {
+             //   if (err.path && err.path.length > 0) {
+             //     form.setError(err.path[0] as keyof ProductFormValues, { message: err.message });
+             //   }
+             // });
+        } else {
+            // Show a general form error toast if no specific field errors are returned
+             toast({
+                title: 'Error Creating Product',
+                description: state.message,
+                variant: 'destructive',
+             });
+        }
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+   }, [state, form]);
 
-    // In a real application, you would send this data to your backend/API
-    // e.g., await fetch('/api/products', { method: 'POST', body: JSON.stringify(data) });
 
-    toast({
-      title: 'Product Created',
-      description: `Product "${data.name}" has been successfully created (simulated).`,
-    });
-    form.reset(); // Reset form after successful submission
-    setIsLoading(false);
-  };
+  // Update the onSubmit handler to use the server action
+  // The actual submission is now handled by the <form action={formAction}> attribute
+   const onSubmit = (data: ProductFormValues) => {
+       // This function might still be useful for client-side validation logic *before* submitting
+       // but the primary submission logic is now handled by the `formAction`.
+       // We pass the form data wrapped in `FormData`.
+        const formData = new FormData();
+        Object.entries(data).forEach(([key, value]) => {
+             if (value !== undefined && value !== null) {
+                 formData.append(key, String(value));
+             }
+        });
+        formAction(formData); // Trigger the server action
+   };
+
 
   return (
     <main className="container mx-auto py-8 px-4 flex-grow">
@@ -76,8 +123,10 @@ export default function CreateProductPage() {
           <CardDescription>Fill in the details below to add a new product.</CardDescription>
         </CardHeader>
         <CardContent>
+           {/* Use formAction for server action submission */}
+           {/* We still use form.handleSubmit for client-side validation */}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form action={formAction} onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="name"
@@ -88,6 +137,12 @@ export default function CreateProductPage() {
                       <Input placeholder="e.g., Wireless Headphones" {...field} />
                     </FormControl>
                     <FormMessage />
+                     {/* Display server-side error for this field */}
+                     {state.errors?.find(e => e.path?.[0] === 'name') && (
+                        <p className="text-sm font-medium text-destructive">
+                            {state.errors.find(e => e.path?.[0] === 'name')?.message}
+                        </p>
+                    )}
                   </FormItem>
                 )}
               />
@@ -102,6 +157,11 @@ export default function CreateProductPage() {
                       <Textarea placeholder="Describe the product..." {...field} />
                     </FormControl>
                     <FormMessage />
+                    {state.errors?.find(e => e.path?.[0] === 'description') && (
+                        <p className="text-sm font-medium text-destructive">
+                            {state.errors.find(e => e.path?.[0] === 'description')?.message}
+                        </p>
+                    )}
                   </FormItem>
                 )}
               />
@@ -113,24 +173,27 @@ export default function CreateProductPage() {
                   <FormItem>
                     <FormLabel>Price ($)</FormLabel>
                     <FormControl>
-                       {/* Render Input as type text initially to handle empty state and formatting */}
                       <Input
                         type="number"
                         step="0.01"
                         min="0"
                         placeholder="e.g., 149.99"
                         {...field}
-                        value={field.value ?? ''} // Use empty string if value is undefined
+                        value={field.value ?? ''}
                         onChange={(e) => {
                           const value = e.target.value;
-                           // Allow empty string or valid number input
                            if (value === '' || !isNaN(Number(value))) {
-                            field.onChange(value === '' ? undefined : Number(value)); // Pass undefined if empty, otherwise number
+                            field.onChange(value === '' ? undefined : Number(value));
                           }
                         }}
                       />
                     </FormControl>
                     <FormMessage />
+                     {state.errors?.find(e => e.path?.[0] === 'price') && (
+                        <p className="text-sm font-medium text-destructive">
+                            {state.errors.find(e => e.path?.[0] === 'price')?.message}
+                        </p>
+                    )}
                   </FormItem>
                 )}
               />
@@ -146,6 +209,11 @@ export default function CreateProductPage() {
                       <Input placeholder="e.g., Electronics" {...field} />
                     </FormControl>
                     <FormMessage />
+                    {state.errors?.find(e => e.path?.[0] === 'category') && (
+                        <p className="text-sm font-medium text-destructive">
+                            {state.errors.find(e => e.path?.[0] === 'category')?.message}
+                        </p>
+                    )}
                   </FormItem>
                 )}
               />
@@ -153,27 +221,34 @@ export default function CreateProductPage() {
                <FormField
                 control={form.control}
                 name="imageUrls"
-                 render={({ field: { onChange, value, ...rest } }) => ( // Extract onChange and value
+                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Image URLs</FormLabel>
                     <FormControl>
                        <Textarea
                         placeholder="Enter image URLs separated by commas"
-                         // Handle the value transformation for display
-                         value={Array.isArray(value) ? value.join(', ') : value}
-                         onChange={(e) => onChange(e.target.value)} // Pass the raw string value up
-                        {...rest}
+                         {...field} // Pass field props directly
                       />
                     </FormControl>
                      <p className="text-xs text-muted-foreground">Separate multiple URLs with a comma (,).</p>
                     <FormMessage />
+                    {state.errors?.find(e => e.path?.[0] === 'imageUrls') && (
+                        <p className="text-sm font-medium text-destructive">
+                            {state.errors.find(e => e.path?.[0] === 'imageUrls')?.message}
+                        </p>
+                    )}
                   </FormItem>
                 )}
               />
 
-              <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading ? 'Creating...' : 'Create Product'}
-              </Button>
+              {/* Display general form errors */}
+                {state.errors?.find(e => !e.path || e.path.length === 0) && (
+                    <p className="text-sm font-medium text-destructive">
+                         {state.errors.find(e => !e.path || e.path.length === 0)?.message}
+                    </p>
+                )}
+                {/* Use SubmitButton component */}
+               <SubmitButton />
             </form>
           </Form>
         </CardContent>

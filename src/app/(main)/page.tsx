@@ -1,7 +1,7 @@
 
 "use client";
 
-import type React from 'react'; // Explicit import
+import type React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,9 +12,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useState } from "react";
+import { useFormState, useFormStatus } from 'react-dom';
 import { toast } from "@/hooks/use-toast";
-import { WebsiteIcon, SmartphoneIcon } from "@/components/icons"; // Use SmartphoneIcon
+import { WebsiteIcon, SmartphoneIcon } from "@/components/icons";
+import { submitContactForm, type ContactFormState } from '@/actions/contactActions'; // Import server action
+import { useEffect, useRef } from 'react';
 
 const products = [
   {
@@ -28,57 +30,43 @@ const products = [
     id: "mobile-apps",
     name: "Mobile Apps",
     description: "Develop powerful mobile apps for iOS and Android.",
-    icon: SmartphoneIcon, // Use SmartphoneIcon
+    icon: SmartphoneIcon,
     link: "#",
   },
 ];
 
+// Submit Button component
+function SubmitButton() {
+    const { pending } = useFormStatus();
+    return (
+        <Button type="submit" disabled={pending} className="bg-accent-teal hover:bg-accent-teal/90 text-white">
+            {pending ? 'Sending...' : 'Send Message'}
+        </Button>
+    );
+}
+
 // Explicitly type the component
 const Home: React.FC = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
+  const initialState: ContactFormState = { message: '', success: false };
+  const [state, formAction] = useFormState(submitContactForm, initialState);
+  const formRef = useRef<HTMLFormElement>(null); // Ref to reset the form
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !email || !message) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Simulate form submission
-    try {
-      //   const response = await fetch('/api/contact', {
-      //     method: 'POST',
-      //     headers: {
-      //       'Content-Type': 'application/json',
-      //     },
-      //     body: JSON.stringify({ name, email, message }),
-      //   });
-
-      //   if (response.ok) {
+  useEffect(() => {
+    if (state.success) {
       toast({
         title: "Success",
-        description: "Your message has been sent!",
+        description: state.message,
       });
-      setName("");
-      setEmail("");
-      setMessage("");
-      //   } else {
-      //     throw new Error('Failed to send message');
-      //   }
-    } catch (error) {
+      formRef.current?.reset(); // Reset form fields on success
+    } else if (state.message && !state.success) {
       toast({
         title: "Error",
-        description: "Failed to send message.",
+        description: state.message || "Failed to send message.", // Use state message or fallback
         variant: "destructive",
       });
     }
-  };
+  }, [state]);
+
 
   return (
       <main className="container mx-auto py-12 px-4 flex-grow">
@@ -115,7 +103,8 @@ const Home: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
+              {/* Use formAction with the server action */}
+              <form ref={formRef} action={formAction} className="flex flex-col space-y-4">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium mb-1">
                     Name
@@ -123,10 +112,17 @@ const Home: React.FC = () => {
                   <Input
                     type="text"
                     id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    name="name" // Add name attribute
+                    // value={name} // Remove controlled component state
+                    // onChange={(e) => setName(e.target.value)} // Remove controlled component state
                     placeholder="Your Name"
+                    required // Add basic HTML validation
                   />
+                   {state.errors?.name && (
+                        <p className="text-sm font-medium text-destructive mt-1">
+                            {state.errors.name.join(', ')}
+                        </p>
+                   )}
                 </div>
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium mb-1">
@@ -135,10 +131,17 @@ const Home: React.FC = () => {
                   <Input
                     type="email"
                     id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    name="email" // Add name attribute
+                    // value={email} // Remove controlled component state
+                    // onChange={(e) => setEmail(e.target.value)} // Remove controlled component state
                      placeholder="Your Email"
+                     required // Add basic HTML validation
                   />
+                    {state.errors?.email && (
+                        <p className="text-sm font-medium text-destructive mt-1">
+                            {state.errors.email.join(', ')}
+                        </p>
+                   )}
                 </div>
                 <div>
                   <label htmlFor="message" className="block text-sm font-medium mb-1">
@@ -146,14 +149,25 @@ const Home: React.FC = () => {
                   </label>
                   <Textarea
                     id="message"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
+                    name="message" // Add name attribute
+                    // value={message} // Remove controlled component state
+                    // onChange={(e) => setMessage(e.target.value)} // Remove controlled component state
                     placeholder="Your Message"
+                    required // Add basic HTML validation
                   />
+                    {state.errors?.message && (
+                        <p className="text-sm font-medium text-destructive mt-1">
+                            {state.errors.message.join(', ')}
+                        </p>
+                   )}
                 </div>
-                <Button type="submit" className="bg-accent-teal hover:bg-accent-teal/90 text-white">
-                  Send Message
-                </Button>
+                 {/* Display general form errors */}
+                 {state.errors?._form && (
+                        <p className="text-sm font-medium text-destructive">
+                            {state.errors._form.join(', ')}
+                        </p>
+                 )}
+                <SubmitButton /> {/* Use the SubmitButton component */}
               </form>
             </CardContent>
           </Card>
