@@ -93,20 +93,9 @@ export default function CreateProductPage() {
    }, [state, form]);
 
 
-  // Update the onSubmit handler to use the server action
-  // The actual submission is now handled by the <form action={formAction}> attribute
-   const onSubmit = (data: ProductFormValues) => {
-       // This function might still be useful for client-side validation logic *before* submitting
-       // but the primary submission logic is now handled by the `formAction`.
-       // We pass the form data wrapped in `FormData`.
-        const formData = new FormData();
-        Object.entries(data).forEach(([key, value]) => {
-             if (value !== undefined && value !== null) {
-                 formData.append(key, String(value));
-             }
-        });
-        formAction(formData); // Trigger the server action
-   };
+  // Removed the onSubmit handler.
+  // Client-side validation is handled by react-hook-form via the resolver.
+  // Form submission is handled by the `action` prop on the <form> element.
 
 
   return (
@@ -125,9 +114,9 @@ export default function CreateProductPage() {
         </CardHeader>
         <CardContent>
            {/* Use formAction for server action submission */}
-           {/* We still use form.handleSubmit for client-side validation */}
+           {/* Remove onSubmit, rely on the 'action' prop */}
           <Form {...form}>
-            <form action={formAction} onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form action={formAction} className="space-y-6">
               <FormField
                 control={form.control}
                 name="name"
