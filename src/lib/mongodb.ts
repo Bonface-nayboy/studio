@@ -25,7 +25,7 @@ if (!trimmedUri.startsWith('mongodb://') && !trimmedUri.startsWith('mongodb+srv:
     console.error('[mongodb.ts] ERROR: Trimmed MONGODB_URI does not start with mongodb:// or mongodb+srv://.');
     console.error('[mongodb.ts] Trimmed URI value:', JSON.stringify(trimmedUri));
     // Throw the specific error message that the user is seeing - this is the source of the persistent error
-    throw new Error('Invalid MongoDB connection string scheme.'); // Line 25 (adjust line number based on actual final code)
+    throw new Error('Invalid MongoDB connection string scheme.'); // This line matches the error stack trace location
 } else {
     console.log('[mongodb.ts] MONGODB_URI scheme check passed (starts with mongodb:// or mongodb+srv://).');
 }
@@ -51,19 +51,20 @@ if (!cached) {
 async function dbConnect(): Promise<typeof mongoose> {
   console.log('[dbConnect] Function called.');
   // Use the validated and trimmed URI from the module scope
-  const uriToConnect = trimmedUri;
+  const uriToConnect = trimmedUri; // THIS is the validated URI
 
   if (cached.conn) {
-    // Check mongoose connection state
+    // Check mongoose connection state *before* returning the cached connection
     if (mongoose.connection.readyState >= 1) { // 1 = connected, 2 = connecting
-        console.log('[dbConnect] Using cached and ready database connection.');
+        console.log('[dbConnect] Using cached and ready database connection (state: %s).', mongoose.connection.readyState);
         return cached.conn;
     } else {
         console.warn('[dbConnect] Cached connection exists but is not ready (state: %s). Clearing cache and attempting reconnect.', mongoose.connection.readyState);
         // Clear potentially broken cache
         cached.conn = null;
         cached.promise = null;
-        mongoose.connection.close().catch(err => console.error('[dbConnect] Error closing stale connection:', err)); // Attempt to close old connection
+        // Don't await close here, just fire and forget to avoid blocking
+        mongoose.connection.close().catch(err => console.error('[dbConnect] Error closing stale connection:', err));
     }
   }
 
@@ -78,10 +79,9 @@ async function dbConnect(): Promise<typeof mongoose> {
       socketTimeoutMS: 45000, // Example: 45 seconds
     };
 
-    console.log(`[dbConnect] Attempting to connect to MongoDB with trimmed URI: ${JSON.stringify(uriToConnect)}`);
-
-    // Final check before connect, though the module-level check should prevent this
-    if (!uriToConnect || !uriToConnect.startsWith('mongodb') ) {
+    // Final check and log *before* connect, using the exact variable passed to connect
+    console.log(`[dbConnect] Attempting to connect to MongoDB with validated/trimmed URI: ${JSON.stringify(uriToConnect)}`);
+    if (!uriToConnect || (!uriToConnect.startsWith('mongodb://') && !uriToConnect.startsWith('mongodb+srv://')) ) {
         console.error('[dbConnect] CRITICAL ERROR: uriToConnect is invalid immediately before mongoose.connect call.', JSON.stringify(uriToConnect));
         cached.promise = null; // Ensure promise is nullified
         throw new Error('Invalid MongoDB URI immediately before connection attempt.');
@@ -90,8 +90,9 @@ async function dbConnect(): Promise<typeof mongoose> {
     console.log('[dbConnect] Creating new database connection promise.');
     // Store the promise
     cached.promise = mongoose.connect(uriToConnect, opts).then((mongooseInstance) => {
-      console.log('[dbConnect] Database connection established successfully.');
-      cached.conn = mongooseInstance; // Cache the connection object itself on success
+      console.log('[dbConnect] Database connection established successfully (readyState: %s).', mongooseInstance.connection.readyState);
+      // **Important**: Cache the connection object itself ONLY on successful connection within the promise resolution.
+      // cached.conn = mongooseInstance; // -> Moved to the try block after await
       return mongooseInstance;
     }).catch(err => {
        console.error('[dbConnect] Database connection error during initial connect:', err);
@@ -111,11 +112,11 @@ async function dbConnect(): Promise<typeof mongoose> {
   // Await the promise (either the one just created or the existing one)
   try {
       console.log('[dbConnect] Awaiting database connection promise...');
-      // Assign the resolved connection to cached.conn if it's not already set
-      if (!cached.conn) {
-          cached.conn = await cached.promise;
-      }
-      console.log('[dbConnect] Database connection promise resolved.');
+      // Assign the resolved connection to cached.conn *after* successful await
+      const connection = await cached.promise;
+      cached.conn = connection; // Cache the connection object here
+      console.log('[dbConnect] Database connection promise resolved (readyState: %s).', connection.connection.readyState);
+
   } catch (e: any) {
       console.error('[dbConnect] Error resolving database connection promise:', e.message || e);
       console.error(`[dbConnect] Failed promise resolution for URI: ${JSON.stringify(uriToConnect)}`);
@@ -124,22 +125,24 @@ async function dbConnect(): Promise<typeof mongoose> {
       throw e; // Rethrow the error caught during the connection attempt or promise resolution
   }
 
-  // Final check after awaiting
+  // Final check *after* awaiting
   if (!cached.conn) {
-     console.error('[dbConnect] Connection object is null after awaiting promise.');
+     console.error('[dbConnect] FATAL: Connection object is null after awaiting promise.');
      cached.promise = null; // Ensure promise is cleared
      throw new Error('Database connection failed: Connection object is unexpectedly null after promise resolution.');
   }
 
-  if (mongoose.connection.readyState < 1) {
-        console.error('[dbConnect] Connection object exists, but readyState indicates disconnection (%s).', mongoose.connection.readyState);
+  // Add an extra check for readyState after awaiting, before returning
+  if (mongoose.connection.readyState < 1) { // Check if disconnected (0) or invalid state
+        console.error('[dbConnect] FATAL: Connection object exists, but readyState indicates disconnection (%s) AFTER promise resolution.', mongoose.connection.readyState);
         cached.conn = null;
         cached.promise = null;
+        mongoose.connection.close().catch(err => console.error('[dbConnect] Error closing connection after failed readyState check:', err));
          throw new Error('Database connection failed: Connection state is disconnected after resolving.');
   }
 
 
-  console.log('[dbConnect] Returning valid connection object.');
+  console.log('[dbConnect] Returning valid connection object (readyState: %s).', cached.conn.connection.readyState);
   return cached.conn;
 }
 
