@@ -1,31 +1,33 @@
 // src/lib/mongodb.ts
 import mongoose from 'mongoose';
 
-// Read and immediately trim the environment variable
-const RAW_MONGODB_URI = process.env.MONGODB_URI;
-const MONGODB_URI = typeof RAW_MONGODB_URI === 'string' ? RAW_MONGODB_URI.trim() : undefined;
+const MONGODB_URI = process.env.MONGODB_URI;
 
-// **Enhanced Logging for Debugging**
-console.log(`[mongodb.ts] Initial load: RAW_MONGODB_URI type is "${typeof RAW_MONGODB_URI}", value=${JSON.stringify(RAW_MONGODB_URI)}`);
-console.log(`[mongodb.ts] Initial load: Trimmed MONGODB_URI type is "${typeof MONGODB_URI}", value=${JSON.stringify(MONGODB_URI)}`);
+// **Essential Initial Check - Log Raw Value and Type**
+console.log(`[mongodb.ts] Initial load: MONGODB_URI type is "${typeof MONGODB_URI}", raw value=${JSON.stringify(MONGODB_URI)}`);
 
-
-// Add a check and log if the URI is missing or seems malformed immediately
-if (!MONGODB_URI) { // Check the trimmed value
-  console.error('[mongodb.ts] ERROR: MONGODB_URI environment variable is not defined, empty, or only contained whitespace.');
-  console.error(`[mongodb.ts] Original RAW_MONGODB_URI value: ${JSON.stringify(RAW_MONGODB_URI)}, type: ${typeof RAW_MONGODB_URI}`);
-  throw new Error('FATAL: MONGODB_URI environment variable is not set correctly in .env or is empty after trimming.');
+// 1. Check if the environment variable exists and is a non-empty string
+if (!MONGODB_URI || typeof MONGODB_URI !== 'string' || MONGODB_URI.trim().length === 0) {
+  console.error('[mongodb.ts] ERROR: MONGODB_URI environment variable is not defined, not a string, or is empty.');
+  // Provide a more informative error message
+  throw new Error('FATAL: MONGODB_URI environment variable is missing, invalid, or empty. Please check your .env file or environment configuration.');
 } else {
-   console.log('[mongodb.ts] MONGODB_URI found and is a non-empty string after trimming.');
-   // Check the scheme explicitly here *after* confirming it's a non-empty string
-   if (!MONGODB_URI.startsWith('mongodb://') && !MONGODB_URI.startsWith('mongodb+srv://')) {
-     console.error('[mongodb.ts] ERROR: MONGODB_URI environment variable does not start with mongodb:// or mongodb+srv:// after trimming.');
-     // Log the problematic URI *exactly* as it is before throwing
-     console.error('[mongodb.ts] Current MONGODB_URI value being checked for scheme:', JSON.stringify(MONGODB_URI));
-     throw new Error('Invalid MongoDB connection string scheme.'); // This is the line causing the error in the stack trace
-   } else {
-        console.log('[mongodb.ts] MONGODB_URI scheme check passed (starts with mongodb:// or mongodb+srv://).');
-   }
+    console.log('[mongodb.ts] MONGODB_URI basic check passed (exists, is string, not empty).');
+}
+
+// 2. Trim the URI *after* confirming it's a valid string
+const trimmedUri = MONGODB_URI.trim();
+console.log(`[mongodb.ts] Trimmed MONGODB_URI value: ${JSON.stringify(trimmedUri)}`);
+
+
+// 3. Check the scheme on the *trimmed* URI
+if (!trimmedUri.startsWith('mongodb://') && !trimmedUri.startsWith('mongodb+srv://')) {
+    console.error('[mongodb.ts] ERROR: Trimmed MONGODB_URI does not start with mongodb:// or mongodb+srv://.');
+    console.error('[mongodb.ts] Trimmed URI value:', JSON.stringify(trimmedUri));
+    // Throw the specific error message that the user is seeing - this is the source of the persistent error
+    throw new Error('Invalid MongoDB connection string scheme.'); // Line 25 (adjust line number based on actual final code)
+} else {
+    console.log('[mongodb.ts] MONGODB_URI scheme check passed (starts with mongodb:// or mongodb+srv://).');
 }
 
 
@@ -34,112 +36,110 @@ if (!MONGODB_URI) { // Check the trimmed value
  * in development. This prevents connections growing exponentially
  * during API Route usage.
  */
-let cached = (global as any).mongoose;
+// Use a type assertion for the global object to avoid 'any'
+interface MongooseCache {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
+
+let cached: MongooseCache = (global as any).mongoose;
 
 if (!cached) {
   cached = (global as any).mongoose = { conn: null, promise: null };
 }
 
-async function dbConnect() {
+async function dbConnect(): Promise<typeof mongoose> {
   console.log('[dbConnect] Function called.');
-  // Log the URI and its type *inside* dbConnect as well, in case it changes contextually
-  // Use the already trimmed MONGODB_URI constant
-  console.log(`[dbConnect] Using MONGODB_URI inside dbConnect: type="${typeof MONGODB_URI}", value=${JSON.stringify(MONGODB_URI)}`);
-
-  // Re-validate the URI *inside* dbConnect before proceeding - use the trimmed one
-  if (!MONGODB_URI) { // Should not happen if initial check passed, but good defense
-    console.error('[dbConnect] ERROR: MONGODB_URI is invalid or missing inside dbConnect.');
-    throw new Error('MONGODB_URI is not available or invalid within dbConnect scope.');
-  }
-  // Re-check scheme just before using it - use the trimmed one
-  if (!MONGODB_URI.startsWith('mongodb://') && !MONGODB_URI.startsWith('mongodb+srv://')) {
-      console.error('[dbConnect] ERROR: Invalid scheme detected inside dbConnect right before connect attempt.');
-      console.error('[dbConnect] Invalid URI value:', JSON.stringify(MONGODB_URI));
-      cached.promise = null; // Clear promise if URI is invalid here
-      throw new Error('Invalid MongoDB connection string scheme detected before connect.');
-  }
-
+  // Use the validated and trimmed URI from the module scope
+  const uriToConnect = trimmedUri;
 
   if (cached.conn) {
-    console.log('[dbConnect] Using cached database connection.');
-    // Optional: Check if connection is still valid? (Advanced)
-    // try {
-    //   await cached.conn.db.admin().ping();
-    //   console.log('[dbConnect] Cached connection ping successful.');
-    //   return cached.conn;
-    // } catch (pingError) {
-    //   console.warn('[dbConnect] Cached connection failed ping, attempting reconnect.', pingError);
-    //   cached.conn = null;
-    //   cached.promise = null; // Force re-creation of promise
-    // }
-    return cached.conn;
+    // Check mongoose connection state
+    if (mongoose.connection.readyState >= 1) { // 1 = connected, 2 = connecting
+        console.log('[dbConnect] Using cached and ready database connection.');
+        return cached.conn;
+    } else {
+        console.warn('[dbConnect] Cached connection exists but is not ready (state: %s). Clearing cache and attempting reconnect.', mongoose.connection.readyState);
+        // Clear potentially broken cache
+        cached.conn = null;
+        cached.promise = null;
+        mongoose.connection.close().catch(err => console.error('[dbConnect] Error closing stale connection:', err)); // Attempt to close old connection
+    }
   }
+
 
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false,
+      bufferCommands: false, // Important for catching connection errors quickly
       serverSelectionTimeoutMS: 5000, // Timeout faster for debugging
+      // useNewUrlParser and useUnifiedTopology are deprecated and default to true in Mongoose 6+
+      appName: 'ProductShowcaseApp', // Optional: Identify the app in MongoDB logs
+       // Add socket timeout
+      socketTimeoutMS: 45000, // Example: 45 seconds
     };
 
-    // **Crucial Logging Step:** Log the URI right before attempting connection
-    console.log(`[dbConnect] Attempting to connect to MongoDB with URI: ${JSON.stringify(MONGODB_URI)}`);
-    console.log(`[dbConnect] Type of URI before connect: ${typeof MONGODB_URI}`);
-    // Perform one final check immediately before connect call
-    if (!MONGODB_URI || (typeof MONGODB_URI === 'string' && (!MONGODB_URI.startsWith('mongodb://') && !MONGODB_URI.startsWith('mongodb+srv://')))) {
-        console.error('[dbConnect] CRITICAL ERROR: Invalid MONGODB_URI detected immediately before mongoose.connect call.');
-        console.error('[dbConnect] URI value:', JSON.stringify(MONGODB_URI));
+    console.log(`[dbConnect] Attempting to connect to MongoDB with trimmed URI: ${JSON.stringify(uriToConnect)}`);
+
+    // Final check before connect, though the module-level check should prevent this
+    if (!uriToConnect || !uriToConnect.startsWith('mongodb') ) {
+        console.error('[dbConnect] CRITICAL ERROR: uriToConnect is invalid immediately before mongoose.connect call.', JSON.stringify(uriToConnect));
+        cached.promise = null; // Ensure promise is nullified
         throw new Error('Invalid MongoDB URI immediately before connection attempt.');
     }
 
-
     console.log('[dbConnect] Creating new database connection promise.');
-    // Use the trimmed MONGODB_URI here
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
+    // Store the promise
+    cached.promise = mongoose.connect(uriToConnect, opts).then((mongooseInstance) => {
       console.log('[dbConnect] Database connection established successfully.');
+      cached.conn = mongooseInstance; // Cache the connection object itself on success
       return mongooseInstance;
     }).catch(err => {
        console.error('[dbConnect] Database connection error during initial connect:', err);
-       // Log the full error object for more details
-       console.error('[dbConnect] Full error object:', JSON.stringify(err, null, 2));
-        // Log the URI that caused the error
-       console.error(`[dbConnect] Connection failed for URI: ${JSON.stringify(MONGODB_URI)}`); // Log the URI used in this attempt
+       // Log specific error properties if available
+       if (err.name) console.error(`[dbConnect] Error Name: ${err.name}`);
+       if (err.message) console.error(`[dbConnect] Error Message: ${err.message}`);
+       console.error(`[dbConnect] Connection failed for URI: ${JSON.stringify(uriToConnect)}`);
        cached.promise = null; // Reset promise on error
-       // Throw a more specific error message if possible
-       if (err.name === 'MongoParseError') {
-           throw new Error(`Failed to parse MongoDB URI: ${err.message}`);
-       } else if (err.message && err.message.includes('Invalid scheme')) {
-            // This specific catch might be redundant now due to earlier checks, but good for defense
-            throw new Error(`Invalid scheme error during connect for URI "${JSON.stringify(MONGODB_URI)}": ${err.message}`);
-       }
-       throw err; // Rethrow original error if it's not handled above
+       cached.conn = null;    // Reset connection on error
+       // Rethrow the original error or a more specific one
+       throw new Error(`Failed to connect to MongoDB: ${err.message || 'Unknown connection error'}`);
     });
   } else {
      console.log('[dbConnect] Reusing existing database connection promise.');
   }
 
+  // Await the promise (either the one just created or the existing one)
   try {
       console.log('[dbConnect] Awaiting database connection promise...');
-      cached.conn = await cached.promise;
+      // Assign the resolved connection to cached.conn if it's not already set
+      if (!cached.conn) {
+          cached.conn = await cached.promise;
+      }
       console.log('[dbConnect] Database connection promise resolved.');
   } catch (e: any) {
-      console.error('[dbConnect] Error resolving database connection promise:', e.message);
-       // Log the URI associated with this failed attempt
-      console.error(`[dbConnect] Failed promise resolution for URI: ${JSON.stringify(MONGODB_URI)}`);
+      console.error('[dbConnect] Error resolving database connection promise:', e.message || e);
+      console.error(`[dbConnect] Failed promise resolution for URI: ${JSON.stringify(uriToConnect)}`);
       cached.promise = null; // Ensure promise is cleared on error during await
-      // Throw the specific error caught during connection attempt
-      throw new Error(`Failed to connect to database: ${e.message || e}`);
+      cached.conn = null; // Ensure connection is cleared
+      throw e; // Rethrow the error caught during the connection attempt or promise resolution
   }
 
   // Final check after awaiting
   if (!cached.conn) {
      console.error('[dbConnect] Connection object is null after awaiting promise.');
-     // This case might happen if the promise resolved but the connection object is somehow null
-     // or if the catch block didn't properly rethrow.
-     cached.promise = null; // Clear promise if connection is null after await
-     throw new Error('Database connection failed, connection object is null after resolution.');
+     cached.promise = null; // Ensure promise is cleared
+     throw new Error('Database connection failed: Connection object is unexpectedly null after promise resolution.');
   }
 
-  console.log('[dbConnect] Returning connection object.');
+  if (mongoose.connection.readyState < 1) {
+        console.error('[dbConnect] Connection object exists, but readyState indicates disconnection (%s).', mongoose.connection.readyState);
+        cached.conn = null;
+        cached.promise = null;
+         throw new Error('Database connection failed: Connection state is disconnected after resolving.');
+  }
+
+
+  console.log('[dbConnect] Returning valid connection object.');
   return cached.conn;
 }
 
