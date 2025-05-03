@@ -3,7 +3,7 @@
 import type React from 'react';
 import { createContext, useContext, useState, useMemo, useCallback } from 'react';
 import type { Product } from '@/data/products';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 
 export interface CartItem extends Omit<Product, 'imageUrl'> {
   quantity: number;
@@ -52,11 +52,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     // Toast outside setCart
     if (action === 'added') {
-      toast({ title: "Item Added", description: `${product.name} added to cart.`, variant: "success" });
+      toast.success(`${product.name} added to cart.`);
     } else if (action === 'updated') {
-      toast({ title: "Cart Updated", description: `${product.name} quantity updated.`, variant: "success" });
+      toast.success(`${product.name} quantity updated.`);
     } else if (action === 'removed') {
-      toast({ title: "Item Removed", description: `${product.name} removed from cart.`, variant: "destructive" });
+      toast.error(`${product.name} removed from cart.`);
     }
   }, []);
 
@@ -68,11 +68,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (removedItem) {
-      toast({
-        title: "Item Removed",
-        description: `${removedItem.name} removed from cart.`,
-        variant: "destructive",
-      });
+      toast.error(`${removedItem.name} removed from cart.`);
     }
   }, []);
 
@@ -96,23 +92,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (updatedItem && action === 'updated') {
-      toast({
-        title: "Quantity Updated",
-        description: `${updatedItem.name} quantity set to ${quantity}.`,
-      });
+      toast.success(`${updatedItem.name} quantity set to ${quantity}.`);
     } else if (updatedItem && action === 'removed') {
-      toast({
-        title: "Item Removed",
-        description: `${updatedItem.name} removed from cart.`,
-        variant: "destructive",
-      });
+      toast.error(`${updatedItem.name} removed from cart.`);
     }
   }, []);
 
   const clearCart = useCallback((suppressToast = false) => {
     setCart([]);
     if (!suppressToast) {
-      toast({ title: "Cart Cleared", description: "Your shopping cart is now empty.", variant: "success" });
+      toast.info('Your shopping cart is now empty.');
     }
   }, []);
 

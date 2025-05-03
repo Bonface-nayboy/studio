@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { toast } from "@/hooks/use-toast";
+import { toast } from 'react-toastify';
 import Link from 'next/link';
 import MainLayout from '@/app/(main)/layout';
 import { Eye, EyeOff } from 'lucide-react';
@@ -41,21 +41,14 @@ const SignUpPage = () => {
     const data = await response.json();
 
     if (response.ok && data.success) {
-        toast({
-            title: "Success",
-            description: data.message,
-        });
+        toast.success('Account created successfully.');
         // Store user details in local storage
         localStorage.setItem('username', name);
         localStorage.setItem('email', email);
         localStorage.setItem('mobileNumber', mobileNumber);
         window.location.href = '/ecommerce';
     } else {
-      toast({
-        title: "Sign Up Error",
-        description: data.message || 'An error occurred during sign up.',
-        variant: "destructive",
-      });
+      toast.error(data.message || 'An error occurred during sign up.');
       if (data.errors) {
         const errorMap: Record<string, string> = {};
         data.errors.forEach((err: { path?: string[]; message: string }) => {
@@ -73,7 +66,7 @@ const SignUpPage = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    toast({ title: "Info", description: "Google Sign-In not yet implemented." });
+    toast.info('Google Sign-In not yet implemented.');
   };
 
   return (

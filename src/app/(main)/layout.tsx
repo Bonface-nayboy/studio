@@ -47,23 +47,23 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     return (
         <SessionProvider>
             <div className="flex flex-col min-h-screen">
-                <header className="bg-appbar-background text-appbar-foreground p-4 md:p-6 flex items-center justify-between rounded-b-md shadow-md sticky top-0 z-50">
-                    <Link href="/" className="flex items-center">
+                <header className="bg-black text-appbar-foreground p-4 md:p-6 flex items-center justify-between rounded-b-md shadow-md sticky top-0 z-50">
+                   
                         <Logo className="h-8 md:h-10 w-auto" />
-                    </Link>
-                    <nav className="flex items-center space-x-2 md:space-x-4">
+                   
+                    <nav className="flex items-center space-x-3 md:space-x-4">
                         <Link href="/ecommerce" passHref>
                             <Button variant="secondary">E-commerce</Button>
                         </Link>
                         <Link href="/order/hold-orders" passHref>
                             <Button variant="ghost" className="relative">
-                                <Clock className="h-5 w-5" />
+                                <Clock className="h-8 w-8 text-white" />
                                 <span className="sr-only">Hold Orders</span>
                             </Button>
                         </Link>
                         <Link href="/checkout" passHref>
-                            <Button variant="ghost" className="relative">
-                                <ShoppingCart className="h-5 w-5" />
+                            <Button variant="ghost" className="relative ">
+                                <ShoppingCart className="h-7 w-7 text-white" />
                                 {totalItems > 0 && (
                                     <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
                                         {totalItems}
@@ -85,13 +85,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                             <>
                                 <Link href="/account" passHref>
                                     <button className="flex items-center space-x-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A9.969 9.969 0 0112 15c2.21 0 4.21.714 5.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                         </svg>
-                                        <span className="text-lg font-semibold text-blue-600">{username}</span>
+                                        <span className="text-lg font-semibold text-white">{username}</span>
                                     </button>
                                 </Link>
-                                <button onClick={handleSignOut} className="text-sm text-gray-600">Sign Out</button>
+                                <button onClick={handleSignOut} className="text-sm bg-white align-center text-black">Sign Out</button>
                             </>
                         )}
                     </nav>

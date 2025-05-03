@@ -41,6 +41,7 @@ const toastVariants = cva(
   }
 )
 
+// Add moving effect to toast animations
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
@@ -49,7 +50,11 @@ const Toast = React.forwardRef<
   return (
     <ToastPrimitives.Root
       ref={ref}
-      className={cn(toastVariants({ variant }), className)}
+      className={cn(
+        toastVariants({ variant }),
+        "animate-slide-in-left", // Add slide-in-left animation
+        className
+      )}
       {...props}
     />
   )

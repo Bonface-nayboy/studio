@@ -1,8 +1,8 @@
 "use client";
-import React, { useEffect, useState,useRef,useActionState } from 'react';
+import React, { useEffect, useState, useRef, useActionState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import MainLayout from '@/app/(main)/layout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
@@ -18,8 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useFormStatus } from 'react-dom'; 
-
+import { useFormStatus } from 'react-dom';
 
 function getStatusStyle(status) {
   switch (status) {
@@ -80,37 +79,29 @@ export default function AccountPage() {
     setUserData((prev) => ({ ...prev, [id]: value }));
   };
 
-    const initialState: ContactFormState = { message: '', success: false };
-    // Use useActionState instead of useFormState
-    const [state, formAction] = useActionState(submitContactForm, initialState);
-    const formRef = useRef<HTMLFormElement>(null); // Ref to reset the form
-  
-    useEffect(() => {
-      if (state.success) {
-        toast({
-          title: "Success",
-          description: state.message,
-        });
-        formRef.current?.reset(); // Reset form fields on success
-      } else if (state.message && !state.success) {
-        toast({
-          title: "Error",
-          description: state.message || "Failed to send message.", // Use state message or fallback
-          variant: "destructive",
-        });
-      }
-    }, [state]);
+  const initialState: ContactFormState = { message: '', success: false };
+  // Use useActionState instead of useFormState
+  const [state, formAction] = useActionState(submitContactForm, initialState);
+  const formRef = useRef<HTMLFormElement>(null); // Ref to reset the form
 
-    
-    // Submit Button component
-    function SubmitButton() {
-        const { pending } = useFormStatus();
-        return (
-            <Button type="submit" disabled={pending} className="bg-accent-teal hover:bg-accent-teal/90 text-white">
-                {pending ? 'Sending...' : 'Send Message'}
-            </Button>
-        );
+  useEffect(() => {
+    if (state.success) {
+      toast.success(state.message);
+      formRef.current?.reset(); // Reset form fields on success
+    } else if (state.message && !state.success) {
+      toast.error(state.message || "Failed to send message.");
     }
+  }, [state]);
+
+  // Submit Button component
+  function SubmitButton() {
+    const { pending } = useFormStatus();
+    return (
+      <Button type="submit" disabled={pending} className="bg-accent-teal hover:bg-accent-teal/90 text-white">
+        {pending ? 'Sending...' : 'Send Message'}
+      </Button>
+    );
+  }
 
   const handleUpdate = async () => {
     try {
@@ -125,28 +116,16 @@ export default function AccountPage() {
       if (response.ok) {
         const updatedUser = await response.json();
         console.log('User updated successfully:', updatedUser);
-        toast({
-          title: 'Success',
-          description: 'Your details have been updated successfully.',
-          variant: 'default',
-        });
+        toast.info('Your profile has been updated successfully.');
         setEditableFields({ username: false, email: false, mobileNumber: false });
       } else {
         const errorData = await response.json();
         console.error('Failed to update user:', errorData);
-        toast({
-          title: 'Error',
-          description: errorData.error || 'Failed to update your details.',
-          variant: 'destructive',
-        });
+        toast.error(errorData.error || 'Failed to update your details.');
       }
     } catch (error) {
       console.error('Error updating user:', error);
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred while updating your details.',
-        variant: 'destructive',
-      });
+      toast.error('An unexpected error occurred while updating your details.');
     }
   };
 
@@ -195,26 +174,14 @@ export default function AccountPage() {
             setOrders(data);
           } else {
             const errorData = await response.json();
-            toast({
-              title: 'Error',
-              description: errorData.error || 'Failed to fetch orders.',
-              variant: 'destructive',
-            });
+            toast.error(errorData.error || 'Failed to fetch orders.');
           }
         } catch (error) {
           console.error('Error fetching orders:', error);
-          toast({
-            title: 'Error',
-            description: 'An unexpected error occurred while fetching orders.',
-            variant: 'destructive',
-          });
+          toast.error('An unexpected error occurred while fetching orders.');
         }
       } else {
-        toast({
-          title: 'Missing Information',
-          description: 'Please ensure you are signed in to view your orders.',
-          variant: 'destructive',
-        });
+        toast.error('Please ensure you are signed in to view your orders.');
       }
     };
 
@@ -272,27 +239,15 @@ export default function AccountPage() {
               if (response.ok) {
                 const updatedUser = await response.json();
                 setUserData(updatedUser);
-                toast({
-                  title: 'Success',
-                  description: `${type} address added successfully.`,
-                  variant: 'default',
-                });
+                toast.success(`${type} address added successfully.`);
                 closePopup();
               } else {
                 const errorData = await response.json();
-                toast({
-                  title: 'Error',
-                  description: errorData.error || 'Failed to add address.',
-                  variant: 'destructive',
-                });
+                toast.error(errorData.error || 'Failed to add address.');
               }
             } catch (error) {
               console.error('Error adding address:', error);
-              toast({
-                title: 'Error',
-                description: 'An unexpected error occurred while adding the address.',
-                variant: 'destructive',
-              });
+              toast.error('An unexpected error occurred while adding the address.');
             }
           }
         }}
@@ -375,27 +330,15 @@ export default function AccountPage() {
               if (response.ok) {
                 const updatedUser = await response.json();
                 setUserData(updatedUser);
-                toast({
-                  title: 'Success',
-                  description: 'Shipping address added successfully.',
-                  variant: 'default',
-                });
+                toast.success('Shipping address added successfully.');
                 closePopup();
               } else {
                 const errorData = await response.json();
-                toast({
-                  title: 'Error',
-                  description: errorData.error || 'Failed to add shipping address.',
-                  variant: 'destructive',
-                });
+                toast.error(errorData.error || 'Failed to add shipping address.');
               }
             } catch (error) {
               console.error('Error adding shipping address:', error);
-              toast({
-                title: 'Error',
-                description: 'An unexpected error occurred while adding the shipping address.',
-                variant: 'destructive',
-              });
+              toast.error('An unexpected error occurred while adding the shipping address.');
             }
           }
         }}
@@ -506,27 +449,15 @@ export default function AccountPage() {
               if (response.ok) {
                 const updatedUser = await response.json();
                 setUserData(updatedUser);
-                toast({
-                  title: 'Success',
-                  description: 'Payment method added successfully.',
-                  variant: 'default',
-                });
+                toast.success('Payment method added successfully.');
                 closePopup();
               } else {
                 const errorData = await response.json();
-                toast({
-                  title: 'Error',
-                  description: errorData.error || 'Failed to add payment method.',
-                  variant: 'destructive',
-                });
+                toast.error(errorData.error || 'Failed to add payment method.');
               }
             } catch (error) {
               console.error('Error adding payment method:', error);
-              toast({
-                title: 'Error',
-                description: 'An unexpected error occurred while adding the payment method.',
-                variant: 'destructive',
-              });
+              toast.error('An unexpected error occurred while adding the payment method.');
             }
           }
         }}
@@ -624,27 +555,15 @@ export default function AccountPage() {
       if (response.ok) {
         const updatedUser = await response.json();
         setUserData(updatedUser);
-        toast({
-          title: 'Success',
-          description: 'Preferences updated successfully.',
-          variant: 'default',
-        });
+        toast.success('Preferences updated successfully.');
         closePopup();
       } else {
         const errorData = await response.json();
-        toast({
-          title: 'Error',
-          description: errorData.error || 'Failed to update preferences.',
-          variant: 'destructive',
-        });
+        toast.error(errorData.error || 'Failed to update preferences.');
       }
     } catch (error) {
       console.error('Error saving preferences:', error);
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred while saving preferences.',
-        variant: 'destructive',
-      });
+      toast.error('An unexpected error occurred while saving preferences.');
     }
   };
 
@@ -725,87 +644,81 @@ export default function AccountPage() {
                 </div>
               </div>
               <Button onClick={handleUpdate} className="mt-4">Update</Button>
- 
-  <section>
-          <h2 className="text-3xl font-semibold mb-6">Contact Us</h2>
-          <Card>
-            <CardHeader>
-              <CardTitle>Get in Touch</CardTitle>
-              <CardDescription>
-                We'd love to hear from you! Send us a message, and we'll get
-                back to you as soon as possible.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {/* Use formAction with the server action */}
-              <form ref={formRef} action={formAction} className="flex flex-col space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-1">
-                    Name
-                  </label>
-                  <Input
-                    type="text"
-                    id="name"
-                    name="name" // Add name attribute
-                    // value={name} // Remove controlled component state
-                    // onChange={(e) => setName(e.target.value)} // Remove controlled component state
-                    placeholder="Your Name"
-                    required // Add basic HTML validation
-                  />
-                   {state.errors?.name && (
-                        <p className="text-sm font-medium text-destructive mt-1">
+
+              <section>
+                <h2 className="text-3xl font-semibold mb-6">Contact Us</h2>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Get in Touch</CardTitle>
+                    <CardDescription>
+                      We'd love to hear from you! Send us a message, and we'll get
+                      back to you as soon as possible.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Use formAction with the server action */}
+                    <form ref={formRef} action={formAction} className="flex flex-col space-y-4">
+                      <div>
+                        <label htmlFor="name" className="block text-sm font-medium mb-1">
+                          Name
+                        </label>
+                        <Input
+                          type="text"
+                          id="name"
+                          name="name" // Add name attribute
+                          placeholder="Your Name"
+                          required // Add basic HTML validation
+                        />
+                        {state.errors?.name && (
+                          <p className="text-sm font-medium text-destructive mt-1">
                             {state.errors.name.join(', ')}
-                        </p>
-                   )}
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-1">
-                    Email
-                  </label>
-                  <Input
-                    type="email"
-                    id="email"
-                    name="email" // Add name attribute
-                    // value={email} // Remove controlled component state
-                    // onChange={(e) => setEmail(e.target.value)} // Remove controlled component state
-                     placeholder="Your Email"
-                     required // Add basic HTML validation
-                  />
-                    {state.errors?.email && (
-                        <p className="text-sm font-medium text-destructive mt-1">
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label htmlFor="email" className="block text-sm font-medium mb-1">
+                          Email
+                        </label>
+                        <Input
+                          type="email"
+                          id="email"
+                          name="email" // Add name attribute
+                          placeholder="Your Email"
+                          required // Add basic HTML validation
+                        />
+                        {state.errors?.email && (
+                          <p className="text-sm font-medium text-destructive mt-1">
                             {state.errors.email.join(', ')}
-                        </p>
-                   )}
-                </div>
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium mb-1">
-                    Message
-                  </label>
-                  <Textarea
-                    id="message"
-                    name="message" // Add name attribute
-                    // value={message} // Remove controlled component state
-                    // onChange={(e) => setMessage(e.target.value)} // Remove controlled component state
-                    placeholder="Your Message"
-                    required // Add basic HTML validation
-                  />
-                    {state.errors?.message && (
-                        <p className="text-sm font-medium text-destructive mt-1">
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label htmlFor="message" className="block text-sm font-medium mb-1">
+                          Message
+                        </label>
+                        <Textarea
+                          id="message"
+                          name="message" // Add name attribute
+                          placeholder="Your Message"
+                          required // Add basic HTML validation
+                        />
+                        {state.errors?.message && (
+                          <p className="text-sm font-medium text-destructive mt-1">
                             {state.errors.message.join(', ')}
-                        </p>
-                   )}
-                </div>
-                 {/* Display general form errors */}
-                 {state.errors?._form && (
+                          </p>
+                        )}
+                      </div>
+                      {/* Display general form errors */}
+                      {state.errors?._form && (
                         <p className="text-sm font-medium text-destructive">
-                            {state.errors._form.join(', ')}
+                          {state.errors._form.join(', ')}
                         </p>
-                 )}
-                <SubmitButton /> {/* Use the SubmitButton component */}
-              </form>
-            </CardContent>
-          </Card>
-        </section>
+                      )}
+                      <SubmitButton /> {/* Use the SubmitButton component */}
+                    </form>
+                  </CardContent>
+                </Card>
+              </section>
 
             </TabsContent>
 
