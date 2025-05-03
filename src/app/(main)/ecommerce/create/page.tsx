@@ -161,7 +161,7 @@ export default function CreateProductPage() {
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price ($)</FormLabel>
+                    <FormLabel>Price (Ksh)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"

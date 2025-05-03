@@ -1,7 +1,5 @@
 'use client';
-
-import React, { useEffect, useRef, useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -13,167 +11,150 @@ import {
 } from '@/components/ui/card';
 import { toast } from "@/hooks/use-toast";
 import Link from 'next/link';
-import MainLayout from '@/app/(main)/layout'; // Import MainLayout
-import { signUpUser, type SignUpFormState } from '@/actions/authActions'; // Import server action
-
-// Submit Button component
-function SubmitButton() {
-    const { pending } = useFormStatus();
-    return (
-        <Button type="submit" disabled={pending} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-            {pending ? 'Signing Up...' : 'Sign Up'}
-        </Button>
-    );
-}
+import MainLayout from '@/app/(main)/layout';
+import { Eye, EyeOff } from 'lucide-react';
 
 const SignUpPage = () => {
-  const initialState: SignUpFormState = { message: '', success: false };
-  const [state, formAction] = useActionState(signUpUser, initialState);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  useEffect(() => {
-    if (state.success) {
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setLoading(true);
+    setErrors({});
+
+    const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, mobileNumber, password, confirmPassword }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok && data.success) {
+        toast({
+            title: "Success",
+            description: data.message,
+        });
+        // Store user details in local storage
+        localStorage.setItem('username', name);
+        localStorage.setItem('email', email);
+        localStorage.setItem('mobileNumber', mobileNumber);
+        window.location.href = '/ecommerce';
+    } else {
       toast({
-        title: "Success",
-        description: state.message,
+        title: "Sign Up Error",
+        description: data.message || 'An error occurred during sign up.',
+        variant: "destructive",
       });
-      formRef.current?.reset(); // Reset form fields on success
-      // Optionally redirect to sign-in page after a short delay
-      // setTimeout(() => { window.location.href = '/signin'; }, 1500);
-    } else if (state.message && !state.success) {
-        // Display specific field errors or a general error toast
-        if (state.errors?.length) {
-             state.errors.forEach(err => {
-                 toast({
-                    title: `Error in ${err.path?.join('.') || 'form'}`,
-                    description: err.message,
-                    variant: "destructive",
-                });
-             });
-        } else {
-            toast({
-                title: "Sign Up Error",
-                description: state.message,
-                variant: "destructive",
-            });
-        }
+      if (data.errors) {
+        const errorMap: Record<string, string> = {};
+        data.errors.forEach((err: { path?: string[]; message: string }) => {
+          if (err.path?.[0]) {
+            errorMap[err.path[0]] = err.message;
+          } else {
+            errorMap['_form'] = err.message; // General form error
+          }
+        });
+        setErrors(errorMap);
+      }
     }
-  }, [state]);
-
-  // Simulate Google Sign-In (placeholder)
-  const handleGoogleSignIn = async () => {
-    toast({ title: "Info", description: "Google Sign-In not yet implemented." });
-    // In a real app, you'd initiate the Google OAuth flow here
+  
+    setLoading(false);
   };
 
+  const handleGoogleSignIn = async () => {
+    toast({ title: "Info", description: "Google Sign-In not yet implemented." });
+  };
 
   return (
     <MainLayout> {/* Wrap content with MainLayout */}
-      <main className="container mx-auto py-12 px-4 flex-grow flex items-center justify-center">
-        <Card className="max-w-md w-full">
-          <CardHeader>
-            <CardTitle>Sign Up</CardTitle>
-            <CardDescription>Create an account to get started.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form ref={formRef} action={formAction} className="flex flex-col space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium mb-1">
-                  Name
-                </label>
-                <Input
-                  type="text"
-                  id="name"
-                  name="name"
-                  placeholder="Your Name"
-                  required
-                />
-                 {/* Display server-side error for name */}
-                 {state.errors?.find(e => e.path?.[0] === 'name') && (
-                    <p className="text-sm font-medium text-destructive mt-1">
-                        {state.errors.find(e => e.path?.[0] === 'name')?.message}
-                    </p>
-                )}
+         <main className="container mx-auto py-12 px-4 flex-grow flex items-center justify-center">
+           <Card className="max-w-md w-full">
+             <CardHeader>
+               <CardTitle>Sign Up</CardTitle>
+                <CardDescription>Create an account to get started.</CardDescription>
+               </CardHeader>
+             <CardContent>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <label htmlFor="name">Name</label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
               </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-1">
-                  Email
-                </label>
-                <Input
-                  type="email"
-                  id="email"
-                  name="email"
-                  placeholder="Your Email"
-                  required
-                />
-                 {state.errors?.find(e => e.path?.[0] === 'email') && (
-                    <p className="text-sm font-medium text-destructive mt-1">
-                        {state.errors.find(e => e.path?.[0] === 'email')?.message}
-                    </p>
-                )}
+              <div className="space-y-2">
+                <label htmlFor="email">Email</label>
+                <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
               </div>
-               <div>
-                <label htmlFor="mobileNumber" className="block text-sm font-medium mb-1">
-                  Mobile Number (Optional)
-                </label>
-                <Input
-                  type="tel"
-                  id="mobileNumber"
-                  name="mobileNumber"
-                  placeholder="Your Mobile Number"
-                />
-                 {state.errors?.find(e => e.path?.[0] === 'mobileNumber') && (
-                    <p className="text-sm font-medium text-destructive mt-1">
-                        {state.errors.find(e => e.path?.[0] === 'mobileNumber')?.message}
-                    </p>
-                )}
+              <div className="space-y-2">
+                <label htmlFor="mobileNumber">Mobile Number </label>
+                <Input id="mobileNumber" value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} />
+                {errors.mobileNumber && <p className="text-sm text-destructive">{errors.mobileNumber}</p>}
               </div>
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium mb-1">
-                  Password
-                </label>
-                <Input
-                  type="password"
-                  id="password"
-                  name="password"
-                  placeholder="Your Password"
-                  required
-                />
-                 {state.errors?.find(e => e.path?.[0] === 'password') && (
-                    <p className="text-sm font-medium text-destructive mt-1">
-                        {state.errors.find(e => e.path?.[0] === 'password')?.message}
-                    </p>
-                )}
+              <div className="space-y-2">
+                <label htmlFor="password">Password</label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 px-3 text-sm text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
               </div>
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
-                  Confirm Password
-                </label>
-                <Input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  placeholder="Confirm Your Password"
-                  required
-                />
-                 {state.errors?.find(e => e.path?.[0] === 'confirmPassword') && (
-                    <p className="text-sm font-medium text-destructive mt-1">
-                        {state.errors.find(e => e.path?.[0] === 'confirmPassword')?.message}
-                    </p>
-                )}
+              <div className="space-y-2">
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <div className="relative">
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 px-3 text-sm text-gray-600"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
               </div>
-              <SubmitButton />
-            </form>
-            <div className="mt-4 text-center">
-              <Button variant="outline" onClick={handleGoogleSignIn}>
-                Sign Up with Google (Coming Soon)
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Signing Up...' : 'Sign Up'}
               </Button>
             </div>
-            <div className="mt-4 text-center">
-              Already have an account? <Link href="/signin" className="text-primary">Sign In</Link>
-            </div>
-          </CardContent>
-        </Card>
+          </form>
+          <div className="mt-4 space-y-2">
+            <Button variant="outline" onClick={handleGoogleSignIn} className="w-full">
+              Sign Up with Google (Coming Soon)
+            </Button>
+            <p className="text-sm text-muted-foreground">
+              Already have an account? <Link href="/signin">Sign In</Link>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
       </main>
     </MainLayout>
   );

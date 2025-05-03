@@ -39,6 +39,9 @@ const ProductSchema: Schema = new Schema({
   timestamps: true, // Adds createdAt and updatedAt automatically
 });
 
+// Debug log to verify Product model initialization
+console.log('Initializing Product model:', models.Product ? 'Reusing existing model' : 'Creating new model');
+
 // Prevent model overwrite in Next.js hot reloading
 const Product: Model<IProduct> = models.Product || mongoose.model<IProduct>('Product', ProductSchema);
 

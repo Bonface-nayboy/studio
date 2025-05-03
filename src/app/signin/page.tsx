@@ -1,138 +1,174 @@
 'use client';
-
-import React, { useEffect, useRef, useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
 } from '@/components/ui/card';
 import { toast } from "@/hooks/use-toast";
 import Link from 'next/link';
-import MainLayout from '@/app/(main)/layout'; // Import MainLayout
-import { signInUser, type SignInFormState } from '@/actions/authActions'; // Import server action
-
-// Submit Button component
-function SubmitButton() {
-    const { pending } = useFormStatus();
-    return (
-        <Button type="submit" disabled={pending} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-            {pending ? 'Signing In...' : 'Sign In'}
-        </Button>
-    );
-}
+import MainLayout from '@/app/(main)/layout';
+import { Eye, EyeOff } from 'lucide-react';
 
 const SignInPage = () => {
-  const initialState: SignInFormState = { message: '', success: false };
-  const [state, formAction] = useActionState(signInUser, initialState);
-  const formRef = useRef<HTMLFormElement>(null);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
-    if (state.success) {
-      toast({
-        title: "Success",
-        description: state.message,
-      });
-      formRef.current?.reset(); // Reset form fields on success
-      // Optionally redirect to dashboard or home page
-      // window.location.href = '/';
-    } else if (state.message && !state.success) {
-       // Display specific field errors or a general error toast
-        if (state.errors?.length) {
-             state.errors.forEach(err => {
-                 toast({
-                    // Use '_form' path for general errors, or specific path if available
-                    title: `Error ${err.path && err.path[0] !== '_form' ? `in ${err.path?.join('.')}` : ''}`,
-                    description: err.message,
-                    variant: "destructive",
+    const handleSubmit = async (event: React.FormEvent) => {
+        event.preventDefault();
+        setLoading(true);
+        setErrors({});
+
+        const response = await fetch('/api/auth/signin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            toast({
+                title: "Success",
+                description: data.message,
+            });
+
+            console.log("Sign-in successful, data received:", data); // Log the entire data object
+
+            if (data && data.user) {
+                if (data.user.name) {
+                    console.log("Username found in data:", data.user.name);
+                    localStorage.setItem('username', data.user.name);
+                } else {
+                    console.warn("Username not found in data:", data.user);
+                    toast({
+                        title: "Warning",
+                        description: "Username not received from the server.",
+                        variant: "warning",
+                    });
+                }
+                if (data.user.email) {
+                    console.log("Email found in data:", data.user.email);
+                    localStorage.setItem('email', data.user.email);
+                } else {
+                    console.warn("Email not found in data:", data.user);
+                    toast({
+                        title: "Warning",
+                        description: "Email not received from the server.",
+                        variant: "warning",
+                    });
+                }
+                if (data.user.mobileNumber) {
+                    console.log("Mobile number found in data:", data.user.mobileNumber);
+                    localStorage.setItem('mobileNumber', data.user.mobileNumber);
+                } else {
+                    console.warn("Mobile number not found in data:", data.user);
+                    toast({
+                        title: "Warning",
+                        description: "Mobile number not received from the server.",
+                        variant: "warning",
+                    });
+                }
+            } else {
+                console.warn("User data not found in the sign-in response:", data);
+                toast({
+                    title: "Warning",
+                    description: "User information not fully received from the server.",
+                    variant: "warning",
                 });
-             });
+            }
+
+            window.location.href = '/ecommerce';
+
         } else {
-             toast({
+            toast({
                 title: "Sign In Error",
-                description: state.message,
+                description: data.message || 'Invalid email or password.',
                 variant: "destructive",
             });
+            if (data.errors) {
+                const errorMap: Record<string, string> = {};
+                data.errors.forEach((err: { path?: string[]; message: string }) => {
+                    if (err.path?.[0]) {
+                        errorMap[err.path[0]] = err.message;
+                    } else {
+                        errorMap['_form'] = err.message; // General form error
+                    }
+                });
+                setErrors(errorMap);
+            }
         }
-    }
-  }, [state]);
 
-  // Simulate Google Sign-In (placeholder)
-   const handleGoogleSignIn = async () => {
-    toast({ title: "Info", description: "Google Sign-In not yet implemented." });
-    // In a real app, you'd initiate the Google OAuth flow here
-  };
+        setLoading(false);
+    };
 
+    const handleGoogleSignIn = async () => {
+        toast({ title: "Info", description: "Google Sign-In not yet implemented." });
+    };
 
-  return (
-    <MainLayout> {/* Wrap content with MainLayout */}
-      <main className="container mx-auto py-12 px-4 flex-grow flex items-center justify-center">
-        <Card className="max-w-md w-full">
-          <CardHeader>
-            <CardTitle>Sign In</CardTitle>
-            <CardDescription>Enter your email and password to sign in.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form ref={formRef} action={formAction} className="flex flex-col space-y-4">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-1">
-                  Email
-                </label>
-                <Input
-                  type="email"
-                  id="email"
-                  name="email"
-                  placeholder="Your Email"
-                  required
-                />
-                {state.errors?.find(e => e.path?.[0] === 'email') && (
-                    <p className="text-sm font-medium text-destructive mt-1">
-                        {state.errors.find(e => e.path?.[0] === 'email')?.message}
-                    </p>
-                )}
-              </div>
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium mb-1">
-                  Password
-                </label>
-                <Input
-                  type="password"
-                  id="password"
-                  name="password"
-                  placeholder="Your Password"
-                  required
-                />
-                 {state.errors?.find(e => e.path?.[0] === 'password') && (
-                    <p className="text-sm font-medium text-destructive mt-1">
-                        {state.errors.find(e => e.path?.[0] === 'password')?.message}
-                    </p>
-                )}
-              </div>
-               {/* Display general form errors (e.g., invalid credentials) */}
-                {state.errors?.find(e => e.path?.[0] === '_form') && (
-                    <p className="text-sm font-medium text-destructive">
-                         {state.errors.find(e => e.path?.[0] === '_form')?.message}
-                    </p>
-                )}
-              <SubmitButton />
-            </form>
-            <div className="mt-4 text-center">
-              <Button variant="outline" onClick={handleGoogleSignIn}>
-                Sign In with Google (Coming Soon)
-              </Button>
-            </div>
-            <div className="mt-4 text-center">
-              Don't have an account? <Link href="/signup" className="text-primary">Sign Up</Link>
-            </div>
-          </CardContent>
-        </Card>
-      </main>
-    </MainLayout>
-  );
+    return (
+        <MainLayout> {/* Wrap content with MainLayout */}
+            <main className="container mx-auto py-12 px-4 flex-grow flex items-center justify-center">
+                <Card className="max-w-md w-full">
+                    <CardHeader>
+                        <CardTitle>Sign In</CardTitle>
+                        <CardDescription>Enter your email and password to sign in.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={handleSubmit}>
+                            <div className="grid gap-4">
+                                <div className="space-y-2">
+                                    <label htmlFor="email">Email</label>
+                                    <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                    {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                                </div>
+                                <div className="space-y-2">
+                                    <label htmlFor="password">Password</label>
+                                    <div className="relative">
+                                        <Input
+                                            type={showPassword ? "text" : "password"}
+                                            id="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute inset-y-0 right-0 px-3 text-sm text-gray-600"
+                                        >
+                                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                        </button>
+                                    </div>
+                                    {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+                                </div>
+                                {errors._form && <p className="text-sm text-destructive">{errors._form}</p>}
+                                <Button type="submit" disabled={loading}>
+                                    {loading ? 'Signing In...' : 'Sign In'}
+                                </Button>
+                            </div>
+                        </form>
+                        <div className="mt-4 space-y-2">
+                            <Button variant="outline" onClick={handleGoogleSignIn} className="w-full">
+                                Sign In with Google (Coming Soon)
+                            </Button>
+                            <p className="text-sm text-muted-foreground">
+                                Don't have an account? <Link href="/signup">Sign Up</Link>
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </main>
+        </MainLayout>
+    );
 };
 
 export default SignInPage;
