@@ -47,11 +47,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     return (
         <SessionProvider>
             <div className="flex flex-col min-h-screen">
-                <header className="bg-black text-appbar-foreground p-4 md:p-6 flex items-center justify-between rounded-b-md shadow-md sticky top-0 z-50">
                    
+                <header className="bg-black text-appbar-foreground p-2 md:p-3 flex flex-col md:flex-row md:items-center justify-between rounded-b-md shadow-md sticky top-0 z-50">
+
+
                         <Logo className="h-8 md:h-10 w-auto" />
                    
-                    <nav className="flex items-center space-x-3 md:space-x-4">
+                        <nav className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 mt-4 md:mt-0">
+                        
+
                         <Link href="/ecommerce" passHref>
                             <Button variant="secondary">E-commerce</Button>
                         </Link>

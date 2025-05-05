@@ -24,6 +24,7 @@ import { toast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation'; // Import useRouter
 import HeldOrderModel from '@/models/HeldOrder';
 import AddressModal from '@/components/ui/address-modal'; // Import AddressModal component
+import { ToastContainer } from 'react-toastify';
 
 // Inline SVG for PayPal icon (keep as is, since lucide doesn't have it)
 const PaypalIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -199,15 +200,19 @@ export default function CheckoutPage() {
     };
 
     const handleHoldOrder = async () => {
-        if (!checkoutData.email) {
+        const storedEmail = localStorage.getItem('email');
+        console.log('Stored Email:', storedEmail);
+    
+        if (!storedEmail) {
+            console.log('Triggering toast: Sign In Required');
             toast({
-                title: 'Missing Email',
-                description: 'Please provide an email address to hold the order.',
+                title: 'Sign In Required',
+                description: 'Please sign in or sign up to hold the order.',
                 variant: 'destructive',
             });
             return;
         }
-
+    
         if (cart.length === 0) {
             toast({
                 title: 'Empty Cart',
@@ -224,7 +229,7 @@ export default function CheckoutPage() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    email: checkoutData.email,
+                    email: storedEmail, // Use email from local storage
                     items: cart.map(item => ({
                         id: item.id,
                         name: item.name,
@@ -525,6 +530,7 @@ export default function CheckoutPage() {
                     </div>
                 )}
             </main>
+            <ToastContainer/>
         </>
     );
 }

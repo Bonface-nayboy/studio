@@ -16,6 +16,7 @@ import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { createProduct, type ProductFormState } from '@/actions/productActions'; // Import the server action
 import { useEffect, useActionState } from 'react'; // Import useActionState from react
+import ProductsPage from '../products/page';
 
 // Define the schema for product creation using Zod (matches server action schema)
 const productSchema = z.object({
@@ -243,6 +244,7 @@ export default function CreateProductPage() {
           </Form>
         </CardContent>
       </Card>
+      <ProductsPage/>
     </main>
   );
 }

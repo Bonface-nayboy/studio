@@ -6,6 +6,8 @@ export interface IProduct extends Document {
   price: number;
   category: string;
   imageUrls: string[];
+  image: string; // New field for product image
+  visible: boolean; // New field for product visibility
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +37,15 @@ const ProductSchema: Schema = new Schema({
     required: [true, 'Please provide at least one image URL'],
     validate: [(v: string[]) => v.length > 0, 'At least one image URL is required'],
   },
+  image: {
+    type: String,
+    required: [true, 'Please provide a product image'], // New field for product image
+  },
+  visible: {
+    type: Boolean,
+    default: true,
+    required: [true, 'Please specify if the product is visible'],
+  },
 }, {
   timestamps: true, // Adds createdAt and updatedAt automatically
 });
@@ -46,3 +57,5 @@ console.log('Initializing Product model:', models.Product ? 'Reusing existing mo
 const Product: Model<IProduct> = models.Product || mongoose.model<IProduct>('Product', ProductSchema);
 
 export default Product;
+
+//src/models/Product.ts

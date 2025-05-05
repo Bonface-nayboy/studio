@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import MainLayout from '@/app/(main)/layout';
+import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { PlusCircle } from 'lucide-react';
 
 interface OrderItem {
   product: string;
@@ -124,6 +126,11 @@ export default function CashierPage() {
   return (
     <MainLayout>
       <div className="container mx-auto py-8 px-4">
+        <Button asChild>
+          <Link href="/ecommerce/create">
+            <PlusCircle className="mr-2 h-4 w-4" /> Add Product
+          </Link>
+        </Button>
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-bold">All Orders</CardTitle>

@@ -773,45 +773,8 @@ export default function AccountPage() {
                 <div className="p-4 border rounded-lg shadow-md bg-white">
                   <h3 className="text-lg font-semibold mb-2">Addresses</h3>
                   <p className="text-sm text-gray-600">Manage your shipping and billing addresses.</p>
-                  <Button className="mt-4 w-full" onClick={() => handleManageAddresses()}>Manage Addresses</Button>
                   <Button className="mt-4 w-full" onClick={() => handleManageShippingAddresses()}>Manage Shipping Addresses</Button>
-                  <div className="space-y-2">
-                    <label htmlFor="fullname">Full Name</label>
-                    <Input
-                      id="fullname"
-                      name="fullname"
-                      value={userData.fullname || ''}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="Enter your full name"
-                    />
-                    <label htmlFor="street">Street Address (Optional)</label>
-                    <Input
-                      id="street"
-                      name="street"
-                      value={userData.street || ''}
-                      onChange={handleInputChange}
-                      placeholder="Enter your street address"
-                    />
-                    <label htmlFor="city">City</label>
-                    <Input
-                      id="city"
-                      name="city"
-                      value={userData.city || ''}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="Enter your city"
-                    />
-                    <label htmlFor="country">Country</label>
-                    <Input
-                      id="country"
-                      name="country"
-                      value={userData.country || ''}
-                      onChange={handleInputChange}
-                      required
-                      placeholder="Enter your country"
-                    />
-                  </div>
+                  
                 </div>
 
                 {/* Payment Methods Card */}
