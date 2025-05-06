@@ -85,7 +85,7 @@ export default async function OrderStatusPage({ params }: OrderStatusPageProps) 
                                                 <td className="border px-4 py-2 align-top" rowSpan={order.items.length}>
                                                     <p><strong>Order ID:</strong> {order._id}</p>
                                                     <p><strong>Date:</strong> {new Date(order.orderDate).toLocaleDateString()}</p>
-                                                    <p><strong>Total:</strong> Ksh {order.totalPrice.toFixed(2).replace(/\d(?=(\d{3})+(?!\d))/g, ',')}</p>
+                                                    <p><strong>Total:</strong>Ksh {order.totalPrice.toLocaleString('en-KE', { minimumFractionDigits: 2 })} </p>
                                                     <p><strong>Payment:</strong> {order.paymentMethod}</p>
                                                     <p className="flex items-center"><strong className="mr-1">Status:</strong> <span className={`flex items-center ${getStatusStyle(order.status).color}`}>{getStatusStyle(order.status).icon} {order.status}</span></p>
                                                     <p><strong>Shipping Address:</strong></p>
@@ -100,18 +100,18 @@ export default async function OrderStatusPage({ params }: OrderStatusPageProps) 
                                         )}
                                         <td className="border px-4 py-2">{item.product.name}</td>
                                         <td className="border px-4 py-2">{item.quantity}</td>
-                                        <td className="border px-4 py-2">Ksh{item.price.toFixed(2).replace(/\d(?=(\d{3})+(?!\d))/g, ',')}</td>
-                                        <td className="border px-4 py-2">Ksh{(item.price * item.quantity).toFixed(2).replace(/\d(?=(\d{3})+(?!\d))/g, ',')}</td>
+                                        <td className="border px-4 py-2">Ksh {item.price.toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
+                                        <td className="border px-4 py-2">Ksh {(item.price * item.quantity).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
-                        
+
                     </CardContent>
                     <div className="flex justify-end p-4">
-                    <BackButton />
+                        <BackButton />
                     </div>
-                    
+
                 </Card>
 
             </div>

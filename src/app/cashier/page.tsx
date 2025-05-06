@@ -198,7 +198,7 @@ export default function CashierPage() {
                           {new Date(order.orderDate).toLocaleDateString()}
                         </td>
                         <td className="border px-4 py-2">{order.customerName}</td>
-                        <td className="border px-4 py-2">${order.totalPrice.toFixed(2)}</td>
+                        <td className="border px-4 py-2">Ksh {order.totalPrice.toFixed(2)}</td>
                         <td className="border px-4 py-2">{order.paymentMethod}</td>
                         <td className="border px-4 py-2">
                           <select

@@ -1,5 +1,7 @@
 // models/Order.ts
 import mongoose, { Schema, Document } from 'mongoose';
+import Product from './Product'; // 👈 Add this line to fix the error
+
 
 export interface IOrder extends Document {
   items: {
