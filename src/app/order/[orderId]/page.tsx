@@ -1,11 +1,25 @@
 // app/order/[orderId]/page.tsx
 
-import dbConnect from '@/lib/mongodb';
-import OrderModel, { IOrder } from '@/models/Order';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import MainLayout from '@/app/(main)/layout';
 import BackButton from '@/components/ui/BackButton';
 import { getStatusStyle } from '@/lib/utils';
+
+interface OrderItem {
+    productName: string;
+    quantity: number;
+    price: number;
+    subtotal: number;
+}
+
+interface OrderData {
+    orderId: string;
+    date: string;
+    total: number;
+    payment: string;
+    status: string;
+    items: OrderItem[];
+}
 
 interface OrderStatusPageProps {
     params: { orderId?: string };
@@ -13,33 +27,19 @@ interface OrderStatusPageProps {
 
 export default async function OrderStatusPage({ params }: OrderStatusPageProps) {
     const { orderId } = params;
-    let order: IOrder | null = null;
+    let order: OrderData | null = null;
 
     if (orderId) {
         try {
-            await dbConnect();
+            const res = await fetch(`http://localhost:9002/api/order/${orderId}`, {
+                cache: 'no-store',
+            });
 
-            // Populate product info for each item
-            const fetchedOrder = await OrderModel.findById(orderId)
-                .populate('items.product')
-                .lean();
-
-            if (fetchedOrder) {
-                order = {
-                    ...fetchedOrder,
-                    _id: fetchedOrder._id.toString(),
-                    orderDate: fetchedOrder.orderDate.toISOString(),
-                    items: fetchedOrder.items.map(item => ({
-                        ...item,
-                        product: {
-                            _id: item.product._id.toString(),
-                            name: item.product.name,
-                        },
-                    })),
-                } as IOrder;
+            if (res.ok) {
+                order = await res.json();
             }
         } catch (error) {
-            console.error('Error fetching order:', error);
+            console.error('Error fetching order from API:', error);
         }
     }
 
@@ -70,7 +70,6 @@ export default async function OrderStatusPage({ params }: OrderStatusPageProps) 
                             <thead className="bg-gray-100">
                                 <tr>
                                     <th className="border px-4 py-2">Order Info</th>
-                                    <th className="border px-4 py-2">Customer Info</th>
                                     <th className="border px-4 py-2">Product Name</th>
                                     <th className="border px-4 py-2">Quantity</th>
                                     <th className="border px-4 py-2">Price</th>
@@ -79,41 +78,29 @@ export default async function OrderStatusPage({ params }: OrderStatusPageProps) 
                             </thead>
                             <tbody>
                                 {order.items.map((item, index) => (
-                                    <tr key={item.product._id}>
+                                    <tr key={index}>
                                         {index === 0 && (
-                                            <>
-                                                <td className="border px-4 py-2 align-top" rowSpan={order.items.length}>
-                                                    <p><strong>Order ID:</strong> {order._id}</p>
-                                                    <p><strong>Date:</strong> {new Date(order.orderDate).toLocaleDateString()}</p>
-                                                    <p><strong>Total:</strong>Ksh {order.totalPrice.toLocaleString('en-KE', { minimumFractionDigits: 2 })} </p>
-                                                    <p><strong>Payment:</strong> {order.paymentMethod}</p>
-                                                    <p className="flex items-center"><strong className="mr-1">Status:</strong> <span className={`flex items-center ${getStatusStyle(order.status).color}`}>{getStatusStyle(order.status).icon} {order.status}</span></p>
-                                                    <p><strong>Shipping Address:</strong></p>
-                                                    <p>{order.shippingAddress.street}, {order.shippingAddress.county}</p>
-                                                </td>
-                                                <td className="border px-4 py-2 align-top" rowSpan={order.items.length}>
-                                                    <p><strong>Name:</strong> {order.customerName}</p>
-                                                    <p><strong>Email:</strong> {order.customerEmail}</p>
-                                                    <p><strong>Mobile:</strong> {order.customerMobileNumber}</p>
-                                                </td>
-                                            </>
+                                            <td className="border px-4 py-2 align-top" rowSpan={order.items.length}>
+                                                <p><strong>Order ID:</strong> {order.orderId}</p>
+                                                <p><strong>Date:</strong> {new Date(order.date).toLocaleDateString()}</p>
+                                                <p><strong>Total:</strong> Ksh {order.total.toLocaleString('en-KE')}</p>
+                                                <p><strong>Payment:</strong> {order.payment}</p>
+                                                <p className="flex items-center"><strong className="mr-1">Status:</strong> <span className={`flex items-center ${getStatusStyle(order.status).color}`}>{getStatusStyle(order.status).icon} {order.status}</span></p>
+                                            </td>
                                         )}
-                                        <td className="border px-4 py-2">{item.product.name}</td>
+                                        <td className="border px-4 py-2">{item.productName}</td>
                                         <td className="border px-4 py-2">{item.quantity}</td>
-                                        <td className="border px-4 py-2">Ksh {item.price.toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
-                                        <td className="border px-4 py-2">Ksh {(item.price * item.quantity).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</td>
+                                        <td className="border px-4 py-2">Ksh {item.price.toLocaleString('en-KE')}</td>
+                                        <td className="border px-4 py-2">Ksh {item.subtotal.toLocaleString('en-KE')}</td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
-
                     </CardContent>
                     <div className="flex justify-end p-4">
                         <BackButton />
                     </div>
-
                 </Card>
-
             </div>
         </MainLayout>
     );

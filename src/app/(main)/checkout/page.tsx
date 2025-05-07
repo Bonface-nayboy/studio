@@ -20,11 +20,13 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from 'react';
-import { toast } from '@/hooks/use-toast';
+// import { toast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation'; // Import useRouter
 import HeldOrderModel from '@/models/HeldOrder';
 import AddressModal from '@/components/ui/address-modal'; // Import AddressModal component
 import { ToastContainer } from 'react-toastify';
+import { Box, Typography } from '@mui/material';
 
 // Inline SVG for PayPal icon (keep as is, since lucide doesn't have it)
 const PaypalIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -108,8 +110,8 @@ export default function CheckoutPage() {
         }));
     };
 
-    const handleSaveAddress = (county: string, street: string ) => {
-        setShippingAddress({county, street });
+    const handleSaveAddress = (county: string, street: string) => {
+        setShippingAddress({ county, street });
         setIsAddressModalOpen(false);
     };
 
@@ -160,13 +162,22 @@ export default function CheckoutPage() {
             const data = await orderResponse.json();
             console.log('Order created:', data);
 
-            clearCart();
+          
             setIsPaymentConfirmed(true);
-            toast({
-                title: "Order Placed",
-                description: "Your order has been placed successfully!",
-                variant: "success",
+            // toast({
+            //     title: "Order Placed",
+            //     description: "Your order has been placed successfully!",
+            //     variant: "success",
+            // });
+            toast.success("Your order has been placed successfully!", {
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
             });
+            clearCart();
 
             router.push(`/order/${data.orderId}`);
         } catch (error: any) {
@@ -202,7 +213,7 @@ export default function CheckoutPage() {
     const handleHoldOrder = async () => {
         const storedEmail = localStorage.getItem('email');
         console.log('Stored Email:', storedEmail);
-    
+
         if (!storedEmail) {
             console.log('Triggering toast: Sign In Required');
             toast({
@@ -212,7 +223,7 @@ export default function CheckoutPage() {
             });
             return;
         }
-    
+
         if (cart.length === 0) {
             toast({
                 title: 'Empty Cart',
@@ -295,242 +306,461 @@ export default function CheckoutPage() {
         }
     }, []);
 
-    return (
-        <>
-            <AddressModal
-                isOpen={isAddressModalOpen}
-                onClose={() => setIsAddressModalOpen(false)}
-                onSave={({ county, street }) => handleSaveAddress(county,street )}
-            />
-            <main className="container mx-auto py-8 px-4 flex-grow">
-                <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
-                {cart.length === 0 ? (
-                    <Card>
-                        <CardContent className="p-6 text-center text-muted-foreground">
-                            <p className="mb-4">Your cart is empty.</p>
-                            <Button asChild>
-                                <Link href="/ecommerce">Start Shopping</Link>
-                            </Button>
-                        </CardContent>
-                    </Card>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {/* Cart Items */}
-                        <div className="md:col-span-2 space-y-4">
-                            {cart.map((item) => (
-                                <Card key={item.id} className="flex items-center p-4 gap-4 overflow-hidden">
-                                    <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border">
-                                        {item.imageUrls && item.imageUrls.length > 0 ? (
-                                            <Image
-                                                src={item.imageUrls[0]} // Display first image
-                                                alt={item.name}
-                                                fill={true}
-                                                style={{ objectFit: "cover" }}
-                                                sizes="80px" // Specify size for optimization
-                                            />
-                                        ) : (
-                                            <div className="h-full w-full bg-muted flex items-center justify-center text-muted-foreground text-xs">No Image</div>
-                                        )}
-                                    </div>
-                                    <div className="flex-grow">
-                                        <h2 className="font-semibold">{item.name}</h2>
-                                        {/* <p className="text-sm text-muted-foreground">Ksh{item.price.toFixed(2)}</p> */}
+//     return (
+//         <>
+//             <AddressModal
+//                 isOpen={isAddressModalOpen}
+//                 onClose={() => setIsAddressModalOpen(false)}
+//                 onSave={({ county, street }) => handleSaveAddress(county, street)}
+//             />
+//             <main className="container mx-auto py-8 px-4 flex-grow">
+//                 <Box sx={{ display: 'flex', gap: 4, alignItems: 'center', marginBottom: '16px' }}>
+//                     <Typography className="text-3xl font-bold mb-8">Shopping Cart</Typography>
 
-                                        <p className="text-sm text-muted-foreground">Ksh{item.price.toFixed(2).replace(/\d(?=(\d{3})+(?!\d))/g, '$&,')}</p>
+//                     {cart.length > 0 && (
+//                         <Button asChild>
+//                             <Link href="/">Continue Shopping</Link>
+//                         </Button>
+//                     )}
 
-                                        <div className="flex items-center mt-2">
-                                            <Button
-                                                variant="outline"
-                                                size="icon"
-                                                className="h-8 w-8"
-                                                onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                                aria-label={`Decrease quantity of ${item.name}`}
-                                            >
-                                                <Minus className="h-4 w-4" />
-                                            </Button>
-                                            <Input
-                                                type="number"
-                                                min="1"
-                                                value={item.quantity}
-                                                onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value, 10) || 0)}
-                                                className="h-8 w-14 text-center mx-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                                aria-label={`Quantity for ${item.name}`}
-                                            />
-                                            <Button
-                                                variant="outline"
-                                                size="icon"
-                                                className="h-8 w-8"
-                                                onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                                                aria-label={`Increase quantity of ${item.name}`}
-                                            >
-                                                <Plus className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="text-muted-foreground hover:text-destructive"
-                                        onClick={() => removeFromCart(item.id)}
-                                        aria-label={`Remove ${item.name} from cart`}
-                                    >
-                                        <Trash2 className="h-5 w-5" />
-                                        <span className="sr-only">Remove item</span>
-                                    </Button>
-                                </Card>
-                            ))}
 
-                            <div className="mt-4 flex justify-between">
-                                <Button variant="outline" size="sm" onClick={clearCart}>
-                                    Clear Cart
-                                </Button>
-                                <Button
-                                    className="w-24"
-                                    onClick={handleHoldOrder}
-                                >
-                                    Hold Order
-                                </Button>
-                            </div>
-                        </div>
+//                 </Box>
+//                 {cart.length === 0 ? (
+//                     <Card>
+//                         <CardContent className="p-6 text-center text-muted-foreground">
+//                             <p className="mb-4">Your cart is empty.</p>
+//                             <Button asChild>
+//                                 <Link href="/">Start Shopping</Link>
+//                             </Button>
+//                         </CardContent>
+//                     </Card>
+//                 ) : (
+//                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+//                         {/* Cart Items */}
+//                         <div className="md:col-span-2 space-y-4">
+//                             {cart.map((item) => (
+//                                 <Card key={item.id} className="flex items-center p-4 gap-4 overflow-hidden">
+//                                     <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border">
+//                                         {item.imageUrls && item.imageUrls.length > 0 ? (
+//                                             <Image
+//                                                 src={item.imageUrls[0]} // Display first image
+//                                                 alt={item.name}
+//                                                 fill={true}
+//                                                 style={{ objectFit: "cover" }}
+//                                                 sizes="80px" // Specify size for optimization
+//                                             />
+//                                         ) : (
+//                                             <div className="h-full w-full bg-muted flex items-center justify-center text-muted-foreground text-xs">No Image</div>
+//                                         )}
+//                                     </div>
+//                                     <div className="flex-grow">
+//                                         <h2 className="font-semibold">{item.name}</h2>
+//                                         {/* <p className="text-sm text-muted-foreground">Ksh{item.price.toFixed(2)}</p> */}
 
-                        {/* Order Summary */}
-                        <div className="md:col-span-1">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Order Summary</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-0">
-                                    <div className="flex justify-between">
-                                        <span>Subtotal</span>
-                                        <span>Ksh{totalPrice.toFixed(2).replace(/\d(?=(\d{3})+(?!\d))/g, '$&,')}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span>Shipping</span>
-                                        <span>Free</span>
-                                    </div>
-                                    <Separator className="my-0" />
-                                    <div className="flex justify-between font-semibold text-lg">
-                                        <span>Total</span>
-                                        <span>Ksh{totalPrice.toFixed(2).replace(/\d(?=(\d{3})+(?!\d))/g, '$&,')}</span>
-                                    </div>
-                                </CardContent>
-                                <CardFooter>
-                                    <div className="space-y-4">
-                                        <h2 className="text-lg font-semibold">Shipping Address</h2>
-                                        <div className="space-y-4">
-                                            {shippingAddress ? (
-                                                <div className="p-4 border rounded-md">
-                                                   
-                                                    <p><strong>County:</strong> {shippingAddress.county}</p>
-                                                    <p><strong>Street:</strong> {shippingAddress.street}</p>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => setIsAddressModalOpen(true)}
-                                                    >
-                                                        Edit Address
-                                                    </Button>
-                                                </div>
-                                            ) : (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => setIsAddressModalOpen(true)}
-                                                >
-                                                    Add Shipping Address
-                                                </Button>
-                                            )}
-                                          
-                                        </div>
-                                        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                                            <DialogTrigger asChild>
-                                                <Button className="w-[430px] h-full" onClick={handleProceedToCheckout} disabled={cart.length === 0}>
-                                                    Proceed to Checkout
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="sm:max-w-[425px]">
-                                                <DialogHeader>
-                                                    <DialogTitle>Checkout Details</DialogTitle>
-                                                    <DialogDescription>
-                                                        Please confirm your details for the order.
-                                                    </DialogDescription>
-                                                </DialogHeader>
-                                                <div className="grid gap-4 py-4">
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="name">Name</Label>
-                                                        <Input
-                                                            id="name"
-                                                            name="name"
-                                                            value={checkoutData.name}
-                                                            onChange={handleInputChange}
-                                                            required
-                                                            readOnly // Make the field non-editable
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="email">Email</Label>
-                                                        <Input
-                                                            type="email"
-                                                            id="email"
-                                                            name="email"
-                                                            value={checkoutData.email}
-                                                            onChange={handleInputChange}
-                                                            required
-                                                            readOnly // Make the field non-editable
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="mobileNumber">Mobile Number</Label>
-                                                        <Input
-                                                            id="mobileNumber"
-                                                            name="mobileNumber"
-                                                            value={checkoutData.mobileNumber}
-                                                            onChange={handleInputChange}
-                                                            required
-                                                            readOnly // Make the field non-editable
-                                                        />
-                                                    </div>
-                                                    <DialogTitle className="mt-4">Select Payment Method</DialogTitle>
-                                                    <RadioGroup
-                                                        value={selectedPaymentMethod ?? undefined}
-                                                        onValueChange={setSelectedPaymentMethod}
-                                                        className="grid gap-4 py-2"
-                                                    >
-                                                        <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="paypal" id="paypal" />
-                                                            <Label htmlFor="paypal" className="flex items-center space-x-2">
-                                                                <PaypalIcon className="h-5 w-5" />
-                                                                <span>PayPal</span>
-                                                            </Label>
-                                                        </div>
-                                                        <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value="mpesa" id="mpesa" />
-                                                            <Label htmlFor="mpesa" className="flex items-center space-x-2">
-                                                                <Smartphone className="h-5 w-5" />
-                                                                <span>M-Pesa</span>
-                                                            </Label>
-                                                        </div>
-                                                    </RadioGroup>
-                                                </div>
-                                                <DialogFooter>
-                                                    <Button
-                                                        className="w-full"
-                                                        onClick={handleConfirmPayment}
-                                                        disabled={selectedPaymentMethod === null || loading || !checkoutData.name || !checkoutData.email || !checkoutData.mobileNumber}
-                                                    >
-                                                        {loading ? "Placing Order..." : "Place Order"}
-                                                    </Button>
-                                                </DialogFooter>
-                                            </DialogContent>
-                                        </Dialog>
-                                    </div>
-                                </CardFooter>
-                            </Card>
-                        </div>
+//                                         <p className="text-sm text-muted-foreground">Ksh{item.price.toFixed(2).replace(/\d(?=(\d{3})+(?!\d))/g, '$&,')}</p>
+
+//                                         <div className="flex items-center mt-2">
+//                                             <Button
+//                                                 variant="outline"
+//                                                 size="icon"
+//                                                 className="h-8 w-8"
+//                                                 onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+//                                                 aria-label={`Decrease quantity of ${item.name}`}
+//                                             >
+//                                                 <Minus className="h-4 w-4" />
+//                                             </Button>
+//                                             <Input
+//                                                 type="number"
+//                                                 min="1"
+//                                                 value={item.quantity}
+//                                                 onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value, 10) || 0)}
+//                                                 className="h-8 w-14 text-center mx-2 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+//                                                 aria-label={`Quantity for ${item.name}`}
+//                                             />
+//                                             <Button
+//                                                 variant="outline"
+//                                                 size="icon"
+//                                                 className="h-8 w-8"
+//                                                 onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+//                                                 aria-label={`Increase quantity of ${item.name}`}
+//                                             >
+//                                                 <Plus className="h-4 w-4" />
+//                                             </Button>
+//                                         </div>
+//                                     </div>
+//                                     <Button
+//                                         variant="ghost"
+//                                         size="icon"
+//                                         className="text-muted-foreground hover:text-destructive"
+//                                         onClick={() => removeFromCart(item.id)}
+//                                         aria-label={`Remove ${item.name} from cart`}
+//                                     >
+//                                         <Trash2 className="h-5 w-5" />
+//                                         <span className="sr-only">Remove item</span>
+//                                     </Button>
+//                                 </Card>
+//                             ))}
+
+//                             <div className="mt-4 flex justify-between">
+//                                 <Button variant="outline" size="sm" onClick={clearCart}>
+//                                     Clear Cart
+//                                 </Button>
+//                                 <Button
+//                                     className="w-24"
+//                                     onClick={handleHoldOrder}
+//                                 >
+//                                     Hold Order
+//                                 </Button>
+//                             </div>
+
+//                         </div>
+
+//                         {/* Order Summary */}
+//                         <div className="md:col-span-1">
+//                             <Card>
+//                                 <CardHeader>
+//                                     <CardTitle>Order Summary</CardTitle>
+//                                 </CardHeader>
+//                                 <CardContent className="space-y-0">
+//                                     <div className="flex justify-between">
+//                                         <span>Subtotal</span>
+//                                         <span>Ksh{totalPrice.toFixed(2).replace(/\d(?=(\d{3})+(?!\d))/g, '$&,')}</span>
+//                                     </div>
+//                                     <div className="flex justify-between">
+//                                         <span>Shipping</span>
+//                                         <span>Free</span>
+//                                     </div>
+//                                     <Separator className="my-0" />
+//                                     <div className="flex justify-between font-semibold text-lg">
+//                                         <span>Total</span>
+//                                         <span>Ksh{totalPrice.toFixed(2).replace(/\d(?=(\d{3})+(?!\d))/g, '$&,')}</span>
+//                                     </div>
+//                                 </CardContent>
+//                                 <CardFooter>
+//                                     <div className="space-y-4">
+//                                         <h2 className="text-lg font-semibold">Shipping Address</h2>
+//                                         <div className="space-y-4">
+//                                             {shippingAddress ? (
+//                                                 <div className="p-4 border rounded-md">
+
+//                                                     <p><strong>County:</strong> {shippingAddress.county}</p>
+//                                                     <p><strong>Street:</strong> {shippingAddress.street}</p>
+//                                                     <Button
+//                                                         variant="outline"
+//                                                         size="sm"
+//                                                         onClick={() => setIsAddressModalOpen(true)}
+//                                                     >
+//                                                         Edit Address
+//                                                     </Button>
+//                                                 </div>
+//                                             ) : (
+//                                                 <Button
+//                                                     variant="outline"
+//                                                     size="sm"
+//                                                     onClick={() => setIsAddressModalOpen(true)}
+//                                                 >
+//                                                     Add Shipping Address
+//                                                 </Button>
+//                                             )}
+
+//                                         </div>
+//                                         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+//                                             <DialogTrigger asChild>
+//                                                 <Button className="w-[430px] h-full" onClick={handleProceedToCheckout} disabled={cart.length === 0}>
+//                                                     Proceed to Checkout
+//                                                 </Button>
+//                                             </DialogTrigger>
+//                                             <DialogContent className="sm:max-w-[425px]">
+//                                                 <DialogHeader>
+//                                                     <DialogTitle>Checkout Details</DialogTitle>
+//                                                     <DialogDescription>
+//                                                         Please confirm your details for the order.
+//                                                     </DialogDescription>
+//                                                 </DialogHeader>
+//                                                 <div className="grid gap-4 py-4">
+//                                                     <div className="space-y-2">
+//                                                         <Label htmlFor="name">Name</Label>
+//                                                         <Input
+//                                                             id="name"
+//                                                             name="name"
+//                                                             value={checkoutData.name}
+//                                                             onChange={handleInputChange}
+//                                                             required
+//                                                             readOnly // Make the field non-editable
+//                                                         />
+//                                                     </div>
+//                                                     <div className="space-y-2">
+//                                                         <Label htmlFor="email">Email</Label>
+//                                                         <Input
+//                                                             type="email"
+//                                                             id="email"
+//                                                             name="email"
+//                                                             value={checkoutData.email}
+//                                                             onChange={handleInputChange}
+//                                                             required
+//                                                             readOnly // Make the field non-editable
+//                                                         />
+//                                                     </div>
+//                                                     <div className="space-y-2">
+//                                                         <Label htmlFor="mobileNumber">Mobile Number</Label>
+//                                                         <Input
+//                                                             id="mobileNumber"
+//                                                             name="mobileNumber"
+//                                                             value={checkoutData.mobileNumber}
+//                                                             onChange={handleInputChange}
+//                                                             required
+//                                                             readOnly // Make the field non-editable
+//                                                         />
+//                                                     </div>
+//                                                     <DialogTitle className="mt-4">Select Payment Method</DialogTitle>
+//                                                     <RadioGroup
+//                                                         value={selectedPaymentMethod ?? undefined}
+//                                                         onValueChange={setSelectedPaymentMethod}
+//                                                         className="grid gap-4 py-2"
+//                                                     >
+//                                                         <div className="flex items-center space-x-2">
+//                                                             <RadioGroupItem value="paypal" id="paypal" />
+//                                                             <Label htmlFor="paypal" className="flex items-center space-x-2">
+//                                                                 <PaypalIcon className="h-5 w-5" />
+//                                                                 <span>PayPal</span>
+//                                                             </Label>
+//                                                         </div>
+//                                                         <div className="flex items-center space-x-2">
+//                                                             <RadioGroupItem value="mpesa" id="mpesa" />
+//                                                             <Label htmlFor="mpesa" className="flex items-center space-x-2">
+//                                                                 <Smartphone className="h-5 w-5" />
+//                                                                 <span>M-Pesa</span>
+//                                                             </Label>
+//                                                         </div>
+//                                                     </RadioGroup>
+//                                                 </div>
+//                                                 <DialogFooter>
+//                                                     <Button
+//                                                         className="w-full"
+//                                                         onClick={handleConfirmPayment}
+//                                                         disabled={selectedPaymentMethod === null || loading || !checkoutData.name || !checkoutData.email || !checkoutData.mobileNumber}
+//                                                     >
+//                                                         {loading ? "Placing Order..." : "Place Order"}
+//                                                     </Button>
+//                                                 </DialogFooter>
+//                                             </DialogContent>
+//                                         </Dialog>
+//                                     </div>
+//                                 </CardFooter>
+//                             </Card>
+//                         </div>
+//                     </div>
+//                 )}
+//             </main>
+//             <ToastContainer />
+//         </>
+//     );
+// }
+
+
+
+
+
+return (
+    <>
+      <AddressModal
+        isOpen={isAddressModalOpen}
+        onClose={() => setIsAddressModalOpen(false)}
+        onSave={({ county, street }) => handleSaveAddress(county, street)}
+      />
+      <main className="container mx-auto py-8 px-4 flex-grow">
+        <Box className="flex flex-wrap gap-4 items-center mb-4">
+          <Typography className="text-3xl font-bold mb-4">Shopping Cart</Typography>
+          {cart.length > 0 && (
+            <Button asChild>
+              <Link href="/">Continue Shopping</Link>
+            </Button>
+          )}
+        </Box>
+  
+        {cart.length === 0 ? (
+          <Card>
+            <CardContent className="p-6 text-center text-muted-foreground">
+              <p className="mb-4">Your cart is empty.</p>
+              <Button asChild>
+                <Link href="/">Start Shopping</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Cart Items */}
+            <div className="md:col-span-2 space-y-4">
+              {cart.map((item) => (
+                <Card key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center p-4 gap-4 overflow-hidden">
+                  <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border">
+                    {item.imageUrls?.[0] ? (
+                      <Image
+                        src={item.imageUrls[0]}
+                        alt={item.name}
+                        fill
+                        style={{ objectFit: "cover" }}
+                        sizes="80px"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-muted flex items-center justify-center text-xs text-muted-foreground">No Image</div>
+                    )}
+                  </div>
+                  <div className="flex-grow w-full">
+                    <h2 className="font-semibold">{item.name}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Ksh{item.price.toFixed(2).replace(/\d(?=(\d{3})+(?!\d))/g, "$&,")}
+                    </p>
+                    <div className="flex items-center mt-2">
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(item.id, item.quantity - 1)}>
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
+                        className="h-8 w-14 text-center mx-2"
+                      />
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleQuantityChange(item.id, item.quantity + 1)}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
                     </div>
-                )}
-            </main>
-            <ToastContainer/>
-        </>
-    );
-}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-destructive self-start sm:self-center"
+                    onClick={() => removeFromCart(item.id)}
+                  >
+                    <Trash2 className="h-5 w-5" />
+                    <span className="sr-only">Remove item</span>
+                  </Button>
+                </Card>
+              ))}
+  
+              <div className="mt-4 flex flex-wrap justify-between gap-2">
+                <Button variant="outline" size="sm" onClick={clearCart}>
+                  Clear Cart
+                </Button>
+                <Button size="sm" className="w-full sm:w-32" onClick={handleHoldOrder}>
+                  Hold Order
+                </Button>
+              </div>
+            </div>
+  
+            {/* Order Summary */}
+            <div className="md:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Order Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>Ksh{totalPrice.toFixed(2).replace(/\d(?=(\d{3})+(?!\d))/g, "$&,")}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Shipping</span>
+                    <span>Free</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between font-semibold text-lg">
+                    <span>Total</span>
+                    <span>Ksh{totalPrice.toFixed(2).replace(/\d(?=(\d{3})+(?!\d))/g, "$&,")}</span>
+                  </div>
+                </CardContent>
+  
+                <CardFooter>
+                  <div className="w-full space-y-4">
+                    <h2 className="text-lg font-semibold">Shipping Address</h2>
+                    {shippingAddress ? (
+                      <div className="p-4 border rounded-md space-y-1">
+                        <p><strong>County:</strong> {shippingAddress.county}</p>
+                        <p><strong>Street:</strong> {shippingAddress.street}</p>
+                        <Button variant="outline" size="sm" onClick={() => setIsAddressModalOpen(true)}>
+                          Edit Address
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={() => setIsAddressModalOpen(true)}>
+                        Add Shipping Address
+                      </Button>
+                    )}
+  
+                    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                      <DialogTrigger asChild>
+                        <Button
+                          className="w-full"
+                          onClick={handleProceedToCheckout}
+                          disabled={cart.length === 0}
+                        >
+                          Proceed to Checkout
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="w-full sm:max-w-[425px]">
+                        <DialogHeader>
+                          <DialogTitle>Checkout Details</DialogTitle>
+                          <DialogDescription>Please confirm your details for the order.</DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="name">Name</Label>
+                            <Input id="name" name="name" value={checkoutData.name} readOnly />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input id="email" name="email" value={checkoutData.email} readOnly />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="mobileNumber">Mobile Number</Label>
+                            <Input id="mobileNumber" name="mobileNumber" value={checkoutData.mobileNumber} readOnly />
+                          </div>
+  
+                          <DialogTitle className="mt-4">Select Payment Method</DialogTitle>
+                          <RadioGroup
+                            value={selectedPaymentMethod ?? undefined}
+                            onValueChange={setSelectedPaymentMethod}
+                            className="grid gap-4 py-2"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="paypal" id="paypal" />
+                              <Label htmlFor="paypal" className="flex items-center space-x-2">
+                                <PaypalIcon className="h-5 w-5" />
+                                <span>PayPal</span>
+                              </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="mpesa" id="mpesa" />
+                              <Label htmlFor="mpesa" className="flex items-center space-x-2">
+                                <Smartphone className="h-5 w-5" />
+                                <span>M-Pesa</span>
+                              </Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                        <DialogFooter>
+                          <Button
+                            className="w-full"
+                            onClick={handleConfirmPayment}
+                            disabled={
+                              !selectedPaymentMethod || loading ||
+                              !checkoutData.name || !checkoutData.email || !checkoutData.mobileNumber
+                            }
+                          >
+                            {loading ? "Placing Order..." : "Place Order"}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </CardFooter>
+              </Card>
+            </div>
+          </div>
+        )}
+      </main>
+      <ToastContainer />
+    </>
+  );
+}  

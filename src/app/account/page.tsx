@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef, useActionState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import MainLayout from '@/app/(main)/layout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
@@ -97,7 +98,7 @@ export default function AccountPage() {
   function SubmitButton() {
     const { pending } = useFormStatus();
     return (
-      <Button type="submit" disabled={pending} className="bg-accent-teal hover:bg-accent-teal/90 text-white">
+      <Button type="submit" disabled={pending} className="bg-black hover:bg-accent-teal/90 text-white">
         {pending ? 'Sending...' : 'Send Message'}
       </Button>
     );
