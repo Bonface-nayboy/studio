@@ -36,12 +36,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     return (
         <SessionProvider>
             <div className="flex flex-col min-h-screen">
-                <header className="bg-black text-white p-4 sticky top-0 z-50 shadow-md">
-                    <div className="flex items-center justify-between">
-                        {/* Left section with logo */}
-                        <div className="flex items-center gap-4">
-                            <Logo className="h-8 w-auto" />
+                <header className="bg-black text-white sticky top-0 z-50 shadow-md">
+                    <div className="flex items-center justify-between w-full">
+                        <div className="pl-[1px]">
+                            <Logo className="h-8 w-auto m-0 p-0 block" />
                         </div>
+
+
 
                         {/* Icons that always show (cart and hold) */}
 
