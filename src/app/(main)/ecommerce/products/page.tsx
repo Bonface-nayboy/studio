@@ -1,13 +1,15 @@
-"use client";
+
+'use client';
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import EditProductForm from '@/components/editpage';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -32,7 +34,6 @@ export default function ProductsPage() {
 
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
-
     try {
       const response = await fetch('/api/products', {
         method: 'DELETE',
@@ -73,6 +74,7 @@ export default function ProductsPage() {
   return (
     <main className="container mx-auto py-8 px-4 flex-grow">
       <h1 className="text-3xl font-bold mb-8">Manage Products</h1>
+
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -90,7 +92,7 @@ export default function ProductsPage() {
               <p>Category: {product.category}</p>
               <p>Status: {product.visible ? 'Visible' : 'Hidden'}</p>
               <div className="mt-4 flex gap-2">
-                <Button onClick={() => router.push(`/ecommerce/products/edit/${product._id}`)}>Edit</Button>
+                <Button onClick={() => setEditingProductId(product._id)}>Edit</Button>
                 <Button variant="destructive" onClick={() => handleDelete(product._id)}>Delete</Button>
                 <Button onClick={() => toggleVisibility(product._id, product.visible)}>
                   {product.visible ? 'Hide' : 'Show'}
@@ -100,6 +102,22 @@ export default function ProductsPage() {
           ))}
         </div>
       )}
+
+      {/* Modal Dialog */}
+      <Dialog open={!!editingProductId} onOpenChange={() => setEditingProductId(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+          </DialogHeader>
+          {editingProductId && (
+            <EditProductForm productId={editingProductId} onSuccess={() => {
+              fetchProducts();
+              setEditingProductId(null);
+            }} />
+          )}
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
+

@@ -1,250 +1,395 @@
+// 'use client';
+
+// import { useState } from 'react';
+// import {
+//   Dialog,
+//   DialogTitle,
+//   DialogContent,
+//   DialogActions,
+//   Button,
+//   TextField,
+//   Typography,
+//   Box,
+//   CircularProgress,
+//   Alert,
+// } from '@mui/material';
+// import { useForm } from 'react-hook-form';
+// import ProductsPage from '../products/page';
+// import BackButton from '@/components/ui/BackButton';
+
+// export default function ProductPopupForm() {
+//   const [open, setOpen] = useState(false);
+//   const [loading, setLoading] = useState(false);
+//   const [message, setMessage] = useState('');
+//   const [success, setSuccess] = useState<boolean | null>(null);
+
+//   const {
+//     register,
+//     handleSubmit,
+//     reset,
+//     formState: { errors },
+//   } = useForm({
+//     defaultValues: {
+//       name: '',
+//       description: '',
+//       price: '',
+//       category: '',
+//       imageUrls: '',
+//     },
+//   });
+
+//   const onSubmit = async (data: any) => {
+//     setLoading(true);
+//     setMessage('');
+//     setSuccess(null);
+
+//     try {
+//       const response = await fetch('/api/products/create', {
+//         method: 'POST',
+//         headers: {
+//           'Content-Type': 'application/json',
+//         },
+//         body: JSON.stringify({
+//           ...data,
+//           imageUrls: data.imageUrls.split(',').map((url: string) => url.trim()).filter(Boolean),
+//           price: parseFloat(data.price),
+//         }),
+//       });
+
+//       const result = await response.json();
+
+//       if (result.success) {
+//         setMessage(`Product "${result.data.name}" created successfully!`);
+//         setSuccess(true);
+//         reset();
+//         setTimeout(() => {
+//           setOpen(false);
+//           setMessage('');
+//           setSuccess(null);
+//         }, 1500);
+//       } else {
+//         setMessage(result.message || 'Failed to create product.');
+//         setSuccess(false);
+//       }
+//     } catch (err: any) {
+//       setMessage('An unexpected error occurred.');
+//       setSuccess(false);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <Box textAlign="center" mt={4}>
+//       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+//         <Typography variant="h4" sx={{ ml: 2 }} gutterBottom>
+//           Products Filter
+//         </Typography>
+//         <Button variant="contained" sx={{
+//           backgroundColor: 'white',
+//           color: 'black',
+//           '&:hover': {
+//             backgroundColor: 'black',
+//             color: 'white',
+//           },
+//         }} onClick={() => setOpen(true)}>
+//           Add New Product
+//         </Button>
+     
+//         <BackButton variant="outlined" color="secondary" sx={{ mr: 10 }}/>
+//       </Box>
+
+//       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+//         <DialogTitle>Product Details</DialogTitle>
+//         <DialogContent dividers>
+//           <Typography variant="body2" color="textSecondary" gutterBottom>
+//             Fill in the fields below to add a new product.
+//           </Typography>
+
+//           <Box
+//             component="form"
+//             noValidate
+//             onSubmit={handleSubmit(onSubmit)}
+//             sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}
+//           >
+//             <TextField
+//               label="Product Name"
+//               {...register('name', { required: 'Product name is required' })}
+//               error={!!errors.name}
+//               helperText={errors.name?.message}
+//               fullWidth
+//             />
+
+//             <TextField
+//               label="Description"
+//               {...register('description', { required: 'Description is required' })}
+//               multiline
+//               minRows={3}
+//               error={!!errors.description}
+//               helperText={errors.description?.message}
+//               fullWidth
+//             />
+
+//             <TextField
+//               label="Price (Ksh)"
+//               type="number"
+//               inputProps={{ step: '0.01', min: '0' }}
+//               {...register('price', {
+//                 required: 'Price is required',
+//               })}
+//               error={!!errors.price}
+//               helperText={errors.price?.message}
+//               fullWidth
+//             />
+
+//             <TextField
+//               label="Category"
+//               {...register('category', { required: 'Category is required' })}
+//               error={!!errors.category}
+//               helperText={errors.category?.message}
+//               fullWidth
+//             />
+
+//             <TextField
+//               label="Image URLs"
+//               {...register('imageUrls')}
+//               helperText="Separate multiple URLs with a comma."
+//               fullWidth
+//               multiline
+//               minRows={2}
+//             />
+
+//             {message && (
+//               <Alert severity={success ? 'success' : 'error'}>
+//                 {message}
+//               </Alert>
+//             )}
+
+//             <DialogActions sx={{ justifyContent: 'flex-end', mt: 1 }}>
+//               <Button onClick={() => setOpen(false)} color="secondary" disabled={loading}>
+//                 Cancel
+//               </Button>
+//               <Button type="submit" variant="contained" color="primary" disabled={loading}>
+//                 {loading ? (
+//                   <>
+//                     <CircularProgress size={20} sx={{ mr: 1 }} />
+//                     Creating...
+//                   </>
+//                 ) : (
+//                   'Create Product'
+//                 )}
+//               </Button>
+//             </DialogActions>
+//           </Box>
+//         </DialogContent>
+//       </Dialog>
+//       <ProductsPage />
+//     </Box>
+//   );
+// }
+
+
+
+
+
+
+
+
+
 
 'use client';
 
-import type React from 'react';
-import { useFormStatus } from 'react-dom'; // Keep useFormStatus from react-dom
+import { useState } from 'react';
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
+  Typography, Box, CircularProgress, Alert, IconButton, Menu, MenuItem
+} from '@mui/material';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { toast } from '@/hooks/use-toast';
-import Link from 'next/link';
-import { createProduct, type ProductFormState } from '@/actions/productActions'; // Import the server action
-import { useEffect, useActionState } from 'react'; // Import useActionState from react
 import ProductsPage from '../products/page';
+import BackButton from '@/components/ui/BackButton';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
-// Define the schema for product creation using Zod (matches server action schema)
-const productSchema = z.object({
-  name: z.string().min(3, { message: 'Product name must be at least 3 characters long.' }),
-  description: z.string().min(10, { message: 'Description must be at least 10 characters long.' }),
-  price: z.preprocess(
-    (val) => (val === '' ? undefined : Number(val)), // Convert empty string to undefined before parsing
-    z.number({ invalid_type_error: 'Price must be a number.' }).positive({ message: 'Price must be positive.' })
-  ),
-  category: z.string().min(2, { message: 'Category is required.' }),
-  imageUrls: z.string().min(1, {message: 'At least one image URL is required.'}), // Keep as string for form input
-});
+export default function ProductPopupForm() {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [success, setSuccess] = useState<boolean | null>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [filters, setFilters] = useState({ category: '', name: '', status: '' });
 
-type ProductFormValues = z.infer<typeof productSchema>;
-
-// SubmitButton component to show loading state
-function SubmitButton() {
-    const { pending } = useFormStatus();
-    return (
-        <Button type="submit" disabled={pending} className="w-full">
-            {pending ? 'Creating...' : 'Create Product'}
-        </Button>
-    );
-}
-
-
-export default function CreateProductPage() {
-  // Initial state for the form action
-  const initialState: ProductFormState = { message: '', success: false };
-  // Use useActionState instead of useFormState
-  const [state, formAction] = useActionState(createProduct, initialState);
-
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
       name: '',
       description: '',
-      price: undefined,
+      price: '',
       category: '',
       imageUrls: '',
     },
   });
 
-   // Effect to show toast message on success/error and reset form
-   useEffect(() => {
-    if (state.success) {
-      toast({
-        title: 'Success',
-        description: state.message,
+  const onSubmit = async (data: any) => {
+    setLoading(true);
+    setMessage('');
+    setSuccess(null);
+
+    try {
+      const response = await fetch('/api/products/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          imageUrls: data.imageUrls.split(',').map((url: string) => url.trim()).filter(Boolean),
+          price: parseFloat(data.price),
+        }),
       });
-      form.reset(); // Reset form fields
-       // Optionally redirect or perform other actions
-    } else if (state.message && !state.success) {
-        // Show general error message if present
-        if (state.errors && state.errors.length > 0) {
-             // Optionally, map specific errors to form fields if needed,
-             // though react-hook-form + zodResolver usually handles this
-             console.error("Server validation errors:", state.errors);
-             // Example: Manually setting an error for a field
-             // state.errors.forEach(err => {
-             //   if (err.path && err.path.length > 0) {
-             //     form.setError(err.path[0] as keyof ProductFormValues, { message: err.message });
-             //   }
-             // });
-        } else {
-            // Show a general form error toast if no specific field errors are returned
-             toast({
-                title: 'Error Creating Product',
-                description: state.message,
-                variant: 'destructive',
-             });
-        }
 
+      const result = await response.json();
+
+      if (result.success) {
+        setMessage(`Product "${result.data.name}" created successfully!`);
+        setSuccess(true);
+        reset();
+        setTimeout(() => {
+          setOpen(false);
+          setMessage('');
+          setSuccess(null);
+        }, 1500);
+      } else {
+        setMessage(result.message || 'Failed to create product.');
+        setSuccess(false);
+      }
+    } catch (err: any) {
+      setMessage('An unexpected error occurred.');
+      setSuccess(false);
+    } finally {
+      setLoading(false);
     }
-   }, [state, form]);
+  };
 
+  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
 
-  // Removed the onSubmit handler.
-  // Client-side validation is handled by react-hook-form via the resolver.
-  // Form submission is handled by the `action` prop on the <form> element.
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
 
   return (
-    <main className="container mx-auto py-8 px-4 flex-grow">
-       <div className="flex justify-between items-center mb-8">
-         <h1 className="text-3xl font-bold">Create New Product</h1>
-          <Button asChild variant="outline">
-            <Link href="/ecommerce">Back to Products</Link>
-          </Button>
-        </div>
+    <Box textAlign="center" mt={4}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h4" sx={{ ml: 2 }} gutterBottom>
+          Products Filter
+        <IconButton onClick={handleMenuOpen} sx={{ mr: 2 }}>    
+          <FilterListIcon />
+        </IconButton>
+        </Typography>
 
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>Product Details</CardTitle>
-          <CardDescription>Fill in the details below to add a new product.</CardDescription>
-        </CardHeader>
-        <CardContent>
-           {/* Use formAction for server action submission */}
-           {/* Remove onSubmit, rely on the 'action' prop */}
-          <Form {...form}>
-            <form action={formAction} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Product Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Wireless Headphones" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                     {/* Display server-side error for this field */}
-                     {state.errors?.find(e => e.path?.[0] === 'name') && (
-                        <p className="text-sm font-medium text-destructive">
-                            {state.errors.find(e => e.path?.[0] === 'name')?.message}
-                        </p>
-                    )}
-                  </FormItem>
+        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+          <MenuItem>
+            <TextField
+              label="Category"
+              size="small"
+              value={filters.category}
+              onChange={(e) => handleFilterChange('category', e.target.value)}
+            />
+          </MenuItem>
+          <MenuItem>
+            <TextField
+              label="Name"
+              size="small"
+              value={filters.name}
+              onChange={(e) => handleFilterChange('name', e.target.value)}
+            />
+          </MenuItem>
+          <MenuItem>
+            <TextField
+              label="Status"
+              size="small"
+              value={filters.status}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+            />
+          </MenuItem>
+        </Menu>
+
+        <Button
+          variant="contained"
+          sx={{
+            backgroundColor: 'white',
+            color: 'black',
+            '&:hover': { backgroundColor: 'black', color: 'white' },
+          }}
+          onClick={() => setOpen(true)}
+        >
+          Add New Product
+        </Button>
+
+        <BackButton variant="outlined" color="secondary" sx={{ mr: 10 }} />
+      </Box>
+
+      {/* Dialog for adding product */}
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Product Details</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2" color="textSecondary" gutterBottom>
+            Fill in the fields below to add a new product.
+          </Typography>
+
+          <Box
+            component="form"
+            noValidate
+            onSubmit={handleSubmit(onSubmit)}
+            sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}
+          >
+            <TextField label="Product Name" {...register('name', { required: 'Product name is required' })}
+              error={!!errors.name} helperText={errors.name?.message} fullWidth />
+
+            <TextField label="Description" {...register('description', { required: 'Description is required' })}
+              multiline minRows={3} error={!!errors.description} helperText={errors.description?.message} fullWidth />
+
+            <TextField label="Price (Ksh)" type="number" inputProps={{ step: '0.01', min: '0' }}
+              {...register('price', { required: 'Price is required' })}
+              error={!!errors.price} helperText={errors.price?.message} fullWidth />
+
+            <TextField label="Category" {...register('category', { required: 'Category is required' })}
+              error={!!errors.category} helperText={errors.category?.message} fullWidth />
+
+            <TextField label="Image URLs" {...register('imageUrls')}
+              helperText="Separate multiple URLs with a comma." fullWidth multiline minRows={2} />
+
+            {message && (
+              <Alert severity={success ? 'success' : 'error'}>{message}</Alert>
+            )}
+
+            <DialogActions sx={{ justifyContent: 'flex-end', mt: 1 }}>
+              <Button onClick={() => setOpen(false)} color="secondary" disabled={loading}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="contained" color="primary" disabled={loading}>
+                {loading ? (
+                  <>
+                    <CircularProgress size={20} sx={{ mr: 1 }} />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Product'
                 )}
-              />
+              </Button>
+            </DialogActions>
+          </Box>
+        </DialogContent>
+      </Dialog>
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Describe the product..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    {state.errors?.find(e => e.path?.[0] === 'description') && (
-                        <p className="text-sm font-medium text-destructive">
-                            {state.errors.find(e => e.path?.[0] === 'description')?.message}
-                        </p>
-                    )}
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Price (Ksh)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="e.g., 149.99"
-                        {...field}
-                        value={field.value ?? ''}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                           if (value === '' || !isNaN(Number(value))) {
-                            field.onChange(value === '' ? undefined : Number(value));
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                     {state.errors?.find(e => e.path?.[0] === 'price') && (
-                        <p className="text-sm font-medium text-destructive">
-                            {state.errors.find(e => e.path?.[0] === 'price')?.message}
-                        </p>
-                    )}
-                  </FormItem>
-                )}
-              />
-
-
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Electronics" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    {state.errors?.find(e => e.path?.[0] === 'category') && (
-                        <p className="text-sm font-medium text-destructive">
-                            {state.errors.find(e => e.path?.[0] === 'category')?.message}
-                        </p>
-                    )}
-                  </FormItem>
-                )}
-              />
-
-               <FormField
-                control={form.control}
-                name="imageUrls"
-                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image URLs</FormLabel>
-                    <FormControl>
-                       <Textarea
-                        placeholder="Enter image URLs separated by commas"
-                         {...field} // Pass field props directly
-                      />
-                    </FormControl>
-                     <p className="text-xs text-muted-foreground">Separate multiple URLs with a comma (,).</p>
-                    <FormMessage />
-                    {state.errors?.find(e => e.path?.[0] === 'imageUrls') && (
-                        <p className="text-sm font-medium text-destructive">
-                            {state.errors.find(e => e.path?.[0] === 'imageUrls')?.message}
-                        </p>
-                    )}
-                  </FormItem>
-                )}
-              />
-
-              {/* Display general form errors */}
-                {state.errors?.find(e => !e.path || e.path.length === 0) && (
-                    <p className="text-sm font-medium text-destructive">
-                         {state.errors.find(e => !e.path || e.path.length === 0)?.message}
-                    </p>
-                )}
-                {/* Use SubmitButton component */}
-               <SubmitButton />
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-      <ProductsPage/>
-    </main>
+      {/* Filtered Products Page */}
+      <ProductsPage filters={filters} />
+    </Box>
   );
 }

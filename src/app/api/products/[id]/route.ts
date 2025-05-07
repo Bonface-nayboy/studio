@@ -1,16 +1,19 @@
-// src/app/api/products/[id]/route.ts
 import { NextResponse } from 'next/server';
-import { ObjectId } from 'mongodb';
+import mongoose from 'mongoose';
 import dbConnect from '@/lib/mongodb';
 import Product from '@/models/Product';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   const { id } = params;
 
   try {
-    await dbConnect(); // connect to DB via Mongoose
+    await dbConnect(); // Connect to DB using Mongoose
 
-    if (!ObjectId.isValid(id)) {
+    // ✅ Use mongoose.Types.ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, message: 'Invalid product ID.' }, { status: 400 });
     }
 
