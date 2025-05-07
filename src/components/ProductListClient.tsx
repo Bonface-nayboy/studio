@@ -20,6 +20,8 @@ export default function ProductListClient({ products }: { products: any[] }) {
   const categories = Array.from(new Set(products.map((p) => p.category))).sort();
 
   const filteredProducts = products.filter((product) => {
+    if (!product.visible) return false; 
+    
     const term = searchTerm.toLowerCase();
     const matchesSearch =
       product.name.toLowerCase().includes(term) ||
