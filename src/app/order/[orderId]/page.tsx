@@ -25,16 +25,17 @@ interface OrderStatusPageProps {
     params: { orderId?: string };
 }
 
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:9002';
+
 export default async function OrderStatusPage({ params }: OrderStatusPageProps) {
     const { orderId } = params;
     let order: OrderData | null = null;
 
     if (orderId) {
         try {
-            const res = await fetch(`http://localhost:9002/api/order/${orderId}`, {
+            const res = await fetch(`${baseUrl}/api/order/${orderId}`, {
                 cache: 'no-store',
-            });
-
+              });
             if (res.ok) {
                 order = await res.json();
             }
