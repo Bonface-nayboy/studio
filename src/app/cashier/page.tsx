@@ -124,13 +124,13 @@ export default function CashierPage() {
   };
 
   return (
-    <MainLayout>
-      <div className="container mx-auto py-8 px-4">
-        <Button asChild>
+    // <MainLayout>
+      <div className="container mx-auto py-0 px-2">
+        {/* <Button asChild>
           <Link href="/ecommerce/create">
             <PlusCircle className="mr-2 h-4 w-4" /> Add Product
           </Link>
-        </Button>
+        </Button> */}
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-bold">All Orders</CardTitle>
@@ -261,7 +261,7 @@ export default function CashierPage() {
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+    // </MainLayout>
   );
 }
 
