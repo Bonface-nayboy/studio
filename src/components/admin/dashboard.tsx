@@ -25,12 +25,10 @@ import CashierPage from '@/app/cashier/page'
 import UsersPage from './Users'
 import SettingsPage from './SettingsPage'
 import ReportsPage from './ReportsPage'
-// import NotificationsPage from './NotificationsPage'
-// import HelpPage from './HelpPage'
 import ProfilePage from './ProfilePage'
 import OverviewPage from './OverviewPage'
 import ProductPopupForm from '@/app/(main)/ecommerce/create/page'
-// import OrderStatusPage from '@/app/order/[orderId]/page'
+import { useRouter } from 'next/navigation'
 
 const AdminPanel = [
     { title: 'Overview', icon: <DashboardIcon />, path: '/admin/dashboard' },
@@ -39,14 +37,13 @@ const AdminPanel = [
     { title: 'Users', icon: <GroupIcon />, path: '/admin/users' },
     { title: 'Settings', icon: <SettingsIcon />, path: '/admin/settings' },
     { title: 'Reports', icon: <BarChartIcon />, path: '/admin/reports' },
-    // { title: 'Notifications', icon: <NotificationsIcon />, path: '/admin/notifications' },
-    // { title: 'Help', icon: <HelpOutlineIcon />, path: '/admin/help' },
     { title: 'Profile', icon: <AccountCircleIcon />, path: '/admin/profile' },
     { title: 'Logout', icon: <LogoutIcon />, path: '/admin/logout' }
 ]
 
 export default function Dashboard() {
-    const [selected, setSelected] = useState('Overview')
+    const [selected, setSelected] = useState('Overview');
+    const router = useRouter();
 
     const renderPageContent = () => {
         switch (selected) {
@@ -60,10 +57,6 @@ export default function Dashboard() {
                 return <SettingsPage />
             case 'Reports':
                 return <ReportsPage />
-            // case 'Notifications':
-            //     return <NotificationsPage />
-            // case 'Help':
-            //     return <HelpPage />
             case 'Profile':
                 return <ProfilePage />
             case 'Overview':
@@ -71,6 +64,14 @@ export default function Dashboard() {
                 return <OverviewPage />
         }
     }
+
+    const handleLogout = () => {
+        // Clear session data (localStorage, cookies, etc.)
+        localStorage.removeItem('authToken'); // Example for token-based auth
+        // Redirect to login page
+        router.push('adminpanel/login');
+        alert('Logged out');
+    };
 
     return (
         <Box sx={{ display: 'flex', height: '100vh', backgroundColor: '#111827', justifyContent: 'space-between' }}>
@@ -102,7 +103,13 @@ export default function Dashboard() {
                     {AdminPanel.map((item, index) => (
                         <ListItemButton
                             key={index}
-                            onClick={() => setSelected(item.title)}
+                            onClick={() => {
+                                if (item.title === 'Logout') {
+                                    handleLogout(); // Call handleLogout for Logout option
+                                } else {
+                                    setSelected(item.title); // Normal navigation for other items
+                                }
+                            }}
                             sx={{
                                 borderRadius: '8px',
                                 mb: 1,
@@ -117,6 +124,7 @@ export default function Dashboard() {
                             <ListItemText primary={item.title} />
                         </ListItemButton>
                     ))}
+
                 </List>
 
 

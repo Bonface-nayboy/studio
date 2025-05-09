@@ -12,8 +12,9 @@ import {
 import { toast } from 'react-toastify';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
-import { Typography } from '@mui/material';
+import { Avatar, Box, Typography } from '@mui/material';
 import MainLayout from '@/app/(main)/layout';
+import { Person2 } from '@mui/icons-material';
 
 const LoginAdminPage = () => {
     const [email, setEmail] = useState('');
@@ -27,7 +28,7 @@ const LoginAdminPage = () => {
         setLoading(true);
         setErrors({});
 
-        const response = await fetch('/api/auth/signin', {
+        const response = await fetch('/api/auth/admin/adminlogin', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -69,7 +70,7 @@ const LoginAdminPage = () => {
                 toast.warning('User information not fully received from the server.');
             }
 
-            window.location.href = '/ecommerce';
+            window.location.href = '/admin/adminpanel';
 
         } else {
             toast.error(data.message || 'Invalid email or password.');
@@ -94,10 +95,17 @@ const LoginAdminPage = () => {
     };
 
     return (
-        <MainLayout> {/* Wrap content with MainLayout */}
+        <MainLayout>
             <main className="container mx-auto py-12 px-4 flex-grow flex items-center justify-center">
-                <Typography color='primary' sx={{ p: 2 }}>Rees Admin Page</Typography>
+
                 <Card className="max-w-md w-full">
+                    <div className="flex justify-center">
+                        <Avatar
+                            src='https://gimgs2.nohat.cc/thumb/f/640/male-avatar-admin-profile--m2H7G6H7H7Z5G6m2.jpg'
+                            sx={{ fontSize: 60, color: 'white', backgroundColor: 'black', borderRadius: 20 }}
+                        />
+                    </div>
+                    <Typography color='primary' sx={{ p: 2, fontWeight: 'bold ', textAlign: 'center' }}>Admin Page</Typography>
                     <CardHeader>
                         <CardTitle>Sign In</CardTitle>
                         <CardDescription>Enter your email and password to sign in.</CardDescription>
@@ -140,7 +148,7 @@ const LoginAdminPage = () => {
                                 Sign In with Google (Coming Soon)
                             </Button>
                             <p className="text-sm text-muted-foreground">
-                                Don't have an account? <Link href="/signup">Sign Up</Link>
+                                Don't have an account? <Link href="/admin/adminpanel/register">Sign Up</Link>
                             </p>
                         </div>
                     </CardContent>

@@ -13,7 +13,8 @@ import { toast } from 'react-toastify';
 import Link from 'next/link';
 import MainLayout from '@/app/(main)/layout';
 import { Eye, EyeOff } from 'lucide-react';
-import { Typography } from '@mui/material';
+import { Avatar, Typography } from '@mui/material';
+import { Person2 } from '@mui/icons-material';
 
 const RegisterAdminPage = () => {
     const [name, setName] = useState('');
@@ -31,7 +32,7 @@ const RegisterAdminPage = () => {
         setLoading(true);
         setErrors({});
 
-        const response = await fetch('/api/auth/signup', {
+        const response = await fetch('/api/auth/adminregister', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -47,7 +48,7 @@ const RegisterAdminPage = () => {
             localStorage.setItem('username', name);
             localStorage.setItem('email', email);
             localStorage.setItem('mobileNumber', mobileNumber);
-            window.location.href = '/ecommerce';
+            window.location.href = '/admin/adminpanel';
         } else {
             toast.error(data.message || 'An error occurred during sign up.');
             if (data.errors) {
@@ -71,10 +72,17 @@ const RegisterAdminPage = () => {
     };
 
     return (
-        <MainLayout> {/* Wrap content with MainLayout */}
+        <MainLayout>
             <main className="container mx-auto py-12 px-4 flex-grow flex items-center justify-center">
-            <Typography color='primary' sx={{ p: 2 }}>Rees Admin Page</Typography>
+
                 <Card className="max-w-md w-full">
+                    <div className="flex justify-center">
+                        <Avatar
+                            src='https://gimgs2.nohat.cc/thumb/f/640/male-avatar-admin-profile--m2H7G6H7H7Z5G6m2.jpg'
+                            sx={{ fontSize: 60, color: 'white', backgroundColor: 'black', borderRadius: 20 }}
+                        />
+                    </div>
+                    <Typography color='primary' sx={{ p: 2, fontWeight: 'bold', textAlign: 'center' }}>Admin Page</Typography>
                     <CardHeader>
                         <CardTitle>Sign Up</CardTitle>
                         <CardDescription>Create an account to get started.</CardDescription>
@@ -145,7 +153,7 @@ const RegisterAdminPage = () => {
                                 Sign Up with Google (Coming Soon)
                             </Button>
                             <p className="text-sm text-muted-foreground">
-                                Already have an account? <Link href="/signin">Sign In</Link>
+                                Already have an account? <Link href="/admin/adminpanel/login">Sign In</Link>
                             </p>
                         </div>
                     </CardContent>
