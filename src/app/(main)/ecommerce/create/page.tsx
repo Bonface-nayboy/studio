@@ -39,11 +39,19 @@ export default function ProductPopupForm() {
     setSuccess(null);
 
     try {
+      const reimid = localStorage.getItem('reimid');
+      if (!reimid) {
+        setMessage('User ID not found.');
+        setSuccess(false);
+        return;
+      }
+
       const response = await fetch('/api/products/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
+          reimid,
           imageUrls: data.imageUrls.split(',').map((url: string) => url.trim()).filter(Boolean),
           price: parseFloat(data.price),
         }),
@@ -89,9 +97,9 @@ export default function ProductPopupForm() {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" sx={{ ml: 2 }} gutterBottom>
           Products Filter
-        <IconButton onClick={handleMenuOpen} sx={{ mr: 2 }}>    
-          <FilterListIcon />
-        </IconButton>
+          <IconButton onClick={handleMenuOpen} sx={{ mr: 2 }}>
+            <FilterListIcon />
+          </IconButton>
         </Typography>
 
         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>

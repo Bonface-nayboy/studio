@@ -22,6 +22,8 @@ const RegisterAdminPage = () => {
     const [mobileNumber, setMobileNumber] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [companyName, setCompanyName] = useState(''); // New state for company name
+    const [location, setLocation] = useState(''); // New state for location
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [showPassword, setShowPassword] = useState(false);
@@ -32,22 +34,27 @@ const RegisterAdminPage = () => {
         setLoading(true);
         setErrors({});
 
-        const response = await fetch('/api/auth/adminregister', {
+
+
+        const response = await fetch('/api/auth/admin/adminregister', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ name, email, mobileNumber, password, confirmPassword }),
+            body: JSON.stringify({ name, email, mobileNumber, password, confirmPassword, companyName, location }),
         });
 
         const data = await response.json();
 
-        if (response.ok && data.success) {
+        if (response.ok && data.message === 'Admin registered successfully') {
             toast.success('Account created successfully.');
             // Store user details in local storage
             localStorage.setItem('username', name);
             localStorage.setItem('email', email);
             localStorage.setItem('mobileNumber', mobileNumber);
+            localStorage.setItem('reimid', data.user.reamId); // ✅ correct
+
+
             window.location.href = '/admin/adminpanel';
         } else {
             toast.error(data.message || 'An error occurred during sign up.');
@@ -74,7 +81,6 @@ const RegisterAdminPage = () => {
     return (
         <MainLayout>
             <main className="container mx-auto py-12 px-4 flex-grow flex items-center justify-center">
-
                 <Card className="max-w-md w-full">
                     <div className="flex justify-center">
                         <Avatar
@@ -101,9 +107,19 @@ const RegisterAdminPage = () => {
                                     {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                                 </div>
                                 <div className="space-y-2">
-                                    <label htmlFor="mobileNumber">Mobile Number </label>
+                                    <label htmlFor="mobileNumber">Mobile Number</label>
                                     <Input id="mobileNumber" value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)} />
                                     {errors.mobileNumber && <p className="text-sm text-destructive">{errors.mobileNumber}</p>}
+                                </div>
+                                <div className="space-y-2">
+                                    <label htmlFor="companyName">Company Name</label>
+                                    <Input id="companyName" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+                                    {errors.companyName && <p className="text-sm text-destructive">{errors.companyName}</p>}
+                                </div>
+                                <div className="space-y-2">
+                                    <label htmlFor="location">Location</label>
+                                    <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} />
+                                    {errors.location && <p className="text-sm text-destructive">{errors.location}</p>}
                                 </div>
                                 <div className="space-y-2">
                                     <label htmlFor="password">Password</label>
